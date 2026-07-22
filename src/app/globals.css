@@ -277,6 +277,9 @@ button {
 /* ---------- game ---------- */
 .game {
   justify-content: flex-start;
+  /* tighter side margins on the play screen so the board uses more width */
+  padding-left: 8px;
+  padding-right: 8px;
 }
 .board-wrap {
   flex: 1;
@@ -292,16 +295,16 @@ button {
      Everything downstream is a FRACTION of the cabinet width, so the mueble
      ALWAYS fits the mobile width and never reflows as items clear. */
   --cols: 3;
-  --shelf-gap: 12px;
+  --shelf-gap: 8px;
   box-sizing: border-box;
   /* min(100%, …) guarantees the cabinet is never wider than its container
      (⇒ never wider than the viewport); the cap just keeps 1–2 column levels
      from stretching absurdly wide on big screens. */
-  width: min(100%, calc(var(--cols) * 168px));
+  width: min(100%, calc(var(--cols) * 184px));
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 14px;
+  gap: 10px;
+  padding: 10px;
   border-radius: var(--r-lg);
   background: linear-gradient(180deg, var(--wood), var(--wood-dark));
   box-shadow: var(--shadow-card), inset 0 2px 0 rgba(255, 255, 255, 0.25),
@@ -333,8 +336,8 @@ button {
   width: calc((100% - (var(--cols) - 1) * var(--shelf-gap)) / var(--cols));
   display: grid;
   grid-template-columns: repeat(var(--slots), 1fr);
-  gap: 7px;
-  padding: 8px 8px 11px;
+  gap: 5px;
+  padding: 6px 6px 9px;
   border-radius: var(--r-sm);
   /* warmer, richer wood so the shelves read as real shelving */
   background: linear-gradient(180deg, #cf9a63 0%, #b57e48 42%, #9c6835 100%);
