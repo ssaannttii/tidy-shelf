@@ -170,12 +170,22 @@ export default function Board() {
   if (!level) return null;
 
   const slotsPer = board.slotsPerShelf;
+  // widest row (in shelves) and row count → drive the fixed cell size in CSS
+  const cols = Math.max(1, ...level.layout.map((row) => row.length));
+  const rows = level.layout.length;
 
   return (
     <div className="board-wrap">
       <div
         className={`cabinet ${shaking ? "shake" : ""} ${hammerArmed ? "armed" : ""}`}
         onPointerDown={onPointerDown}
+        style={
+          {
+            "--cols": cols,
+            "--per": slotsPer,
+            "--rows": rows,
+          } as React.CSSProperties
+        }
       >
         {level.layout.map((row, ri) => (
           <div className="cab-row" key={ri}>

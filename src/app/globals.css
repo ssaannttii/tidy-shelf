@@ -288,6 +288,27 @@ button {
   padding: 6px 0;
 }
 .cabinet {
+  /* --cols / --per / --rows are set inline per level from Board.tsx.
+     Fixed cell size so the cabinet NEVER reflows as items clear. */
+  --cols: 3;
+  --per: 3;
+  --rows: 4;
+  --cell: max(
+    32px,
+    min(
+      66px,
+      /* fit the widest row within the available width */
+      calc(
+        (min(96vw, 460px) - 28px - 6px
+          - (var(--cols) - 1) * 12px
+          - var(--cols) * 16px
+          - var(--cols) * (var(--per) - 1) * 7px)
+        / (var(--cols) * var(--per))
+      ),
+      /* and don't let tall cabinets overflow shorter screens */
+      calc((100dvh - 280px) / var(--rows) - 22px)
+    )
+  );
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -316,12 +337,14 @@ button {
 .shelf {
   --slots: 3;
   display: grid;
-  grid-template-columns: repeat(var(--slots), 1fr);
+  /* fixed-width tracks → slot size is independent of whether it holds an item */
+  grid-template-columns: repeat(var(--slots), var(--cell));
   gap: 7px;
   padding: 8px 8px 11px;
   border-radius: var(--r-sm);
-  background: linear-gradient(180deg, #a6764c, #b98a5e 34%);
-  box-shadow: inset 0 -7px 0 rgba(0, 0, 0, 0.24), inset 0 2px 0 rgba(255, 255, 255, 0.18);
+  /* warmer, richer wood so the shelves read as real shelving */
+  background: linear-gradient(180deg, #cf9a63 0%, #b57e48 42%, #9c6835 100%);
+  box-shadow: inset 0 -8px 0 rgba(74, 47, 22, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.22);
   position: relative;
 }
 .shelf.gap {
@@ -343,9 +366,11 @@ button {
 }
 
 .slot {
-  aspect-ratio: 1;
+  width: var(--cell);
+  height: var(--cell);
   border-radius: 9px;
-  background: linear-gradient(180deg, #d9c4a5, #cbb598);
+  /* inner cubby — a touch warmer, like the inside of a wooden shelf */
+  background: linear-gradient(180deg, #dcc6a2, #c8b08a);
   box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.22);
   display: grid;
   place-items: center;
@@ -358,7 +383,7 @@ button {
   border-radius: 12px;
   display: grid;
   place-items: center;
-  font-size: 30px;
+  font-size: calc(var(--cell) * 0.5);
   position: relative;
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.14), inset 0 2px 3px rgba(255, 255, 255, 0.75),
     inset 0 -6px 8px rgba(0, 0, 0, 0.08);
