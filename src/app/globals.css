@@ -295,7 +295,7 @@ button {
      Everything downstream is a FRACTION of the cabinet width, so the mueble
      ALWAYS fits the mobile width and never reflows as items clear. */
   --cols: 3;
-  --shelf-gap: 8px;
+  --shelf-gap: 4px;
   box-sizing: border-box;
   /* min(100%, …) guarantees the cabinet is never wider than its container
      (⇒ never wider than the viewport); the cap just keeps 1–2 column levels
@@ -336,8 +336,8 @@ button {
   width: calc((100% - (var(--cols) - 1) * var(--shelf-gap)) / var(--cols));
   display: grid;
   grid-template-columns: repeat(var(--slots), 1fr);
-  gap: 5px;
-  padding: 6px 6px 9px;
+  gap: 1px;
+  padding: 2px 2px 4px;
   border-radius: var(--r-sm);
   /* warmer, richer wood so the shelves read as real shelving */
   background: linear-gradient(180deg, #cf9a63 0%, #b57e48 42%, #9c6835 100%);
@@ -378,13 +378,13 @@ button {
 }
 
 .item {
-  width: 84%;
-  height: 84%;
-  border-radius: 12px;
+  width: 99%;
+  height: 99%;
+  border-radius: 11px;
   display: grid;
   place-items: center;
   /* scales with the slot (cqmin = 1% of the slot's smaller side), capped */
-  font-size: clamp(13px, 52cqmin, 34px);
+  font-size: clamp(16px, 70cqmin, 48px);
   position: relative;
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.14), inset 0 2px 3px rgba(255, 255, 255, 0.75),
     inset 0 -6px 8px rgba(0, 0, 0, 0.08);
