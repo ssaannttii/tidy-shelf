@@ -1,0 +1,30 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f7ecd9"/>
+      <stop offset="1" stop-color="#efd0a8"/>
+    </linearGradient>
+    <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#c2946a"/>
+      <stop offset="1" stop-color="#8a6440"/>
+    </linearGradient>
+    <linearGradient id="shelf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#b98a5e"/>
+      <stop offset="1" stop-color="#a6764c"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+  <rect x="96" y="96" width="320" height="320" rx="34" fill="url(#wood)" stroke="#6f4e30" stroke-width="10"/>
+  <!-- top shelf -->
+  <rect x="120" y="132" width="272" height="112" rx="16" fill="url(#shelf)"/>
+  <circle cx="168" cy="196" r="34" fill="#ff8a80" stroke="#e0483f" stroke-width="4"/>
+  <circle cx="256" cy="196" r="34" fill="#ffd54a" stroke="#e6a500" stroke-width="4"/>
+  <circle cx="344" cy="196" r="34" fill="#8fd694" stroke="#4aa055" stroke-width="4"/>
+  <rect x="120" y="240" width="272" height="10" rx="5" fill="#6f4e30" opacity="0.55"/>
+  <!-- bottom shelf -->
+  <rect x="120" y="268" width="272" height="112" rx="16" fill="url(#shelf)"/>
+  <circle cx="168" cy="332" r="34" fill="#a5c8ff" stroke="#5b86d6" stroke-width="4"/>
+  <circle cx="256" cy="332" r="34" fill="#d9b3ff" stroke="#a066d6" stroke-width="4"/>
+  <circle cx="344" cy="332" r="34" fill="#ffb3c9" stroke="#e06a90" stroke-width="4"/>
+  <rect x="120" y="376" width="272" height="10" rx="5" fill="#6f4e30" opacity="0.55"/>
+</svg>

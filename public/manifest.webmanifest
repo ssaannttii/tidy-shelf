@@ -1,0 +1,13 @@
+{
+  "name": "Tidy Shelf — Cozy Sorting Puzzle",
+  "short_name": "Tidy Shelf",
+  "description": "Move goods between shelves, match three of a kind, and tidy the cabinet.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#efd9bd",
+  "theme_color": "#b98a5e",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
