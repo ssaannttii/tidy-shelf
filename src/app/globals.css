@@ -1094,3 +1094,84 @@ button {
 .btn.buy.poor {
   filter: grayscale(0.7) opacity(0.6);
 }
+
+/* ============================================================
+   VISUAL PASS — "Happy Tidy / Goods Sort" look
+   (cozy star wallpaper · coral HUD band · combo glow ·
+    sticker praise · wood grain · golden boosters)
+   ============================================================ */
+
+/* 1 — cozy star wallpaper on the play screen */
+.screen.game::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50'%3E%3Cpath d='M25 15l2.4 5 5.5.5-4.2 3.7 1.3 5.4L25 32.4l-5 2.7 1.3-5.4-4.2-3.7 5.5-.5z' fill='%23000' fill-opacity='0.05'/%3E%3C/svg%3E");
+  background-size: 50px 50px;
+  -webkit-mask: radial-gradient(circle at 50% 44%, #000, transparent 92%);
+          mask: radial-gradient(circle at 50% 44%, #000, transparent 92%);
+}
+.screen.game .stage { position: relative; z-index: 1; }
+
+/* 2 — coral HUD band across the top (bleeds to screen edges) */
+.gamebar {
+  background: linear-gradient(180deg, #e58a63, #d0674a);
+  margin: calc(-1 * (var(--safe-top) + 10px)) -8px 4px;
+  padding: calc(var(--safe-top) + 12px) 14px 12px;
+  border-radius: 0 0 22px 22px;
+  box-shadow: 0 6px 16px rgba(208, 103, 74, 0.32), inset 0 2px 0 rgba(255, 255, 255, 0.2);
+  position: relative;
+  z-index: 2;
+}
+.gamebar .level-pill {
+  background: linear-gradient(180deg, #d5543a, #ad3f28);
+  box-shadow: 0 3px 0 rgba(120, 40, 25, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+}
+.gamebar .icon-btn {
+  background: linear-gradient(180deg, #5bb0ec, #3f8fd6);
+  color: #fff;
+  box-shadow: 0 3px 0 rgba(40, 105, 170, 0.55);
+}
+
+/* 3 — golden glow behind the combo pill */
+.combo-pill { position: relative; z-index: 1; }
+.combo-pill::before {
+  content: "";
+  position: absolute;
+  inset: -46px -40px;
+  z-index: -1;
+  background: radial-gradient(circle, rgba(255, 208, 88, 0.6), rgba(255, 208, 88, 0) 66%);
+  animation: comboGlow 0.5s ease-out;
+  pointer-events: none;
+}
+@keyframes comboGlow {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { opacity: 1; }
+  100% { transform: scale(1); opacity: 0.85; }
+}
+
+/* 4 — sticker-style praise words (thicker outline, bouncier) */
+.float.praise {
+  font-size: 34px;
+  -webkit-text-stroke: 2.5px #c0367a;
+  text-shadow: 0 4px 0 #ff7fae, 0 7px 14px rgba(0, 0, 0, 0.32);
+}
+
+/* 5 — subtle wood grain on the shelves */
+.shelf {
+  background-image:
+    repeating-linear-gradient(0deg, rgba(74, 47, 22, 0.055) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 13px),
+    linear-gradient(180deg, #cf9a63 0%, #b57e48 42%, #9c6835 100%);
+}
+
+/* 6 — golden rounded-square boosters (genre look) */
+.powerbar .power {
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffe28f, #f5c34a);
+  box-shadow: 0 5px 0 #e79c2a, inset 0 2px 0 rgba(255, 255, 255, 0.65);
+}
+.powerbar .power:active { box-shadow: 0 2px 0 #e79c2a, inset 0 2px 0 rgba(255, 255, 255, 0.65); }
+.powerbar .power .plabel { color: #8a5a2a; }
