@@ -170,22 +170,16 @@ export default function Board() {
   if (!level) return null;
 
   const slotsPer = board.slotsPerShelf;
-  // widest row (in shelves) and row count → drive the fixed cell size in CSS
+  // widest row (in shelves) → every shelf becomes 1/cols of the cabinet width,
+  // so the mueble always fits the viewport and never reflows as items clear.
   const cols = Math.max(1, ...level.layout.map((row) => row.length));
-  const rows = level.layout.length;
 
   return (
     <div className="board-wrap">
       <div
         className={`cabinet ${shaking ? "shake" : ""} ${hammerArmed ? "armed" : ""}`}
         onPointerDown={onPointerDown}
-        style={
-          {
-            "--cols": cols,
-            "--per": slotsPer,
-            "--rows": rows,
-          } as React.CSSProperties
-        }
+        style={{ "--cols": cols } as React.CSSProperties}
       >
         {level.layout.map((row, ri) => (
           <div className="cab-row" key={ri}>

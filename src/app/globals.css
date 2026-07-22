@@ -288,27 +288,16 @@ button {
   padding: 6px 0;
 }
 .cabinet {
-  /* --cols / --per / --rows are set inline per level from Board.tsx.
-     Fixed cell size so the cabinet NEVER reflows as items clear. */
+  /* --cols (widest row's shelf count) is set inline per level from Board.tsx.
+     Everything downstream is a FRACTION of the cabinet width, so the mueble
+     ALWAYS fits the mobile width and never reflows as items clear. */
   --cols: 3;
-  --per: 3;
-  --rows: 4;
-  --cell: max(
-    32px,
-    min(
-      66px,
-      /* fit the widest row within the available width */
-      calc(
-        (min(96vw, 460px) - 28px - 6px
-          - (var(--cols) - 1) * 12px
-          - var(--cols) * 16px
-          - var(--cols) * (var(--per) - 1) * 7px)
-        / (var(--cols) * var(--per))
-      ),
-      /* and don't let tall cabinets overflow shorter screens */
-      calc((100dvh - 280px) / var(--rows) - 22px)
-    )
-  );
+  --shelf-gap: 12px;
+  box-sizing: border-box;
+  /* min(100%, …) guarantees the cabinet is never wider than its container
+     (⇒ never wider than the viewport); the cap just keeps 1–2 column levels
+     from stretching absurdly wide on big screens. */
+  width: min(100%, calc(var(--cols) * 168px));
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -331,14 +320,19 @@ button {
 }
 .cab-row {
   display: flex;
-  gap: 12px;
+  gap: var(--shelf-gap);
   justify-content: center;
 }
 .shelf {
   --slots: 3;
+  box-sizing: border-box;
+  /* Each shelf is an equal fraction of the row, so --cols shelves + gaps fill
+     the cabinet exactly; narrower rows center their shelves at the same width.
+     Because the width is DEFINITE, the 1fr slot tracks below are content-
+     independent → slots never resize as items clear. */
+  width: calc((100% - (var(--cols) - 1) * var(--shelf-gap)) / var(--cols));
   display: grid;
-  /* fixed-width tracks → slot size is independent of whether it holds an item */
-  grid-template-columns: repeat(var(--slots), var(--cell));
+  grid-template-columns: repeat(var(--slots), 1fr);
   gap: 7px;
   padding: 8px 8px 11px;
   border-radius: var(--r-sm);
@@ -366,8 +360,11 @@ button {
 }
 
 .slot {
-  width: var(--cell);
-  height: var(--cell);
+  aspect-ratio: 1;
+  min-width: 0;
+  /* container so the item/emoji can size off the slot (cqmin) regardless of
+     the actual pixel size the fraction math lands on */
+  container-type: size;
   border-radius: 9px;
   /* inner cubby — a touch warmer, like the inside of a wooden shelf */
   background: linear-gradient(180deg, #dcc6a2, #c8b08a);
@@ -383,7 +380,8 @@ button {
   border-radius: 12px;
   display: grid;
   place-items: center;
-  font-size: calc(var(--cell) * 0.5);
+  /* scales with the slot (cqmin = 1% of the slot's smaller side), capped */
+  font-size: clamp(13px, 52cqmin, 34px);
   position: relative;
   box-shadow: 0 3px 0 rgba(0, 0, 0, 0.14), inset 0 2px 3px rgba(255, 255, 255, 0.75),
     inset 0 -6px 8px rgba(0, 0, 0, 0.08);
