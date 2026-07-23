@@ -12,9 +12,17 @@ export default function LevelMap() {
   const goHome = useGame((s) => s.goHome);
   const [settings, setSettings] = useState(false);
   const totalStars = Object.values(progress.stars).reduce((a, b) => a + b, 0);
+  // "current" = lowest unlocked level not yet cleared
+  let currentId = progress.unlocked;
+  for (let i = 1; i <= progress.unlocked; i++) {
+    if (!((progress.stars[i] ?? 0) > 0)) {
+      currentId = i;
+      break;
+    }
+  }
 
   return (
-    <div className="screen" style={{ background: "linear-gradient(180deg,#f7ecd9,#eccfa6)" }}>
+    <div className="screen map">
       <div className="stage">
         <div className="topbar">
           <div className="group">
@@ -48,10 +56,11 @@ export default function LevelMap() {
                     const locked = l.id > progress.unlocked;
                     const stars = progress.stars[l.id] ?? 0;
                     const done = stars > 0;
+                    const current = !locked && l.id === currentId;
                     return (
                       <button
                         key={l.id}
-                        className={`level-node ${locked ? "locked" : ""} ${done ? "done" : ""}`}
+                        className={`level-node ${locked ? "locked" : ""} ${done ? "done" : ""} ${current ? "current" : ""}`}
                         onClick={() => !locked && startLevel(l.id)}
                         disabled={locked}
                       >

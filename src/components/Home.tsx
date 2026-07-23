@@ -21,6 +21,7 @@ export default function Home() {
       <div className="home-top">
         <button className="pill coins" onClick={() => setShop(true)}>
           <span className="ico">🪙</span> {progress.coins}
+          <span className="plus">＋</span>
         </button>
         <button className="icon-btn" onClick={() => setSettings(true)} aria-label="Ajustes">
           ⚙

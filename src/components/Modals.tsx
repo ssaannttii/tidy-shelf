@@ -42,7 +42,6 @@ export function Confetti() {
 
 export function WinModal() {
   const level = useGame((s) => s.level);
-  const moves = useGame((s) => s.moves);
   const stars = useGame((s) => s.earnedStars);
   const wonCoins = useGame((s) => s.wonCoins);
   const nextLevel = useGame((s) => s.nextLevel);
@@ -51,10 +50,7 @@ export function WinModal() {
   if (!level) return null;
   const isLast = !getLevel(level.id + 1);
   return (
-    <Modal>
-      <div style={{ fontSize: 40 }}>{stars >= 3 ? "🎉" : "✨"}</div>
-      <p style={{ fontWeight: 800, fontSize: 15, margin: 0 }}>Nivel {level.id}</p>
-      <h2>¡Completado!</h2>
+    <div className="win-screen">
       <div className="big-stars">
         {[0, 1, 2].map((i) => (
           <span key={i} className={`s ${i < stars ? "on" : ""} ${i === 1 ? "mid" : ""}`}>
@@ -62,31 +58,22 @@ export function WinModal() {
           </span>
         ))}
       </div>
-      <div className="coin-reward">
-        <span className="coin-ico">🪙</span> +{wonCoins}
-      </div>
-      <div className="stat-row">
-        <div className="stat">
-          <span className="v">{moves}</span>
-          <span className="k">Jugadas</span>
-        </div>
-        <div className="stat">
-          <span className="v">{level.par}</span>
-          <span className="k">Par</span>
-        </div>
-      </div>
-      <div className="modal-actions">
-        <button className="btn ghost" onClick={goMap} aria-label="Niveles">
+      <div className="w-level">Nivel {level.id}</div>
+      <div className="w-title">¡Completado!</div>
+      <div className="w-gift">🎁</div>
+      <div className="w-coins">🪙 +{wonCoins}</div>
+      <div className="w-actions">
+        <button className="icon-btn" onClick={goMap} aria-label="Niveles">
           ☰
         </button>
-        <button className="btn ghost" onClick={replay} aria-label="Reintentar">
+        <button className="icon-btn" onClick={replay} aria-label="Reintentar">
           ↻
         </button>
-        <button className="btn primary" onClick={nextLevel} style={{ flex: 1 }}>
-          {isLast ? "Terminar 🏆" : "Siguiente ▶"}
+        <button className="btn primary" onClick={nextLevel}>
+          {isLast ? "Terminar 🏆" : "Recoger ▶"}
         </button>
       </div>
-    </Modal>
+    </div>
   );
 }
 

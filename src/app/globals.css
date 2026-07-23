@@ -1,25 +1,58 @@
 :root {
-  --wood: #b98a5e;
+  /* ===== Happy Tidy redesign tokens (design handoff) ===== */
+  /* backgrounds */
+  --wall: #ece1ce;
+  --wall-shop: #f3e8d5;
+  --home1: #fbe6c4; --home2: #f6cfa0; --home3: #edb985;
+  /* peach / HUD / tray / nav */
+  --peach: #f2a177; --peach-dark: #e9895f;
+  --tray1: #f0a074; --tray2: #e68b5d;
+  --nav1: #f4c99c; --nav2: #e9ac7c;
+  /* plaque + progress */
+  --plaque1: #cc4433; --plaque2: #a5301f; --plaque-border: #e06a54;
+  --maroon: #b24a34;
+  /* green (primary) */
+  --green1: #9be05b; --green2: #6fb03e; --green-rim: #4d8228;
+  --combo1: #95cf44; --combo2: #6fb03e;
+  /* blue accent */
+  --blue1: #6fc6f0; --blue2: #3f9fd6; --blue-rim: #2f80b6;
+  /* gold / stars / pink / purple */
+  --coin1: #fbe28b; --coin2: #f0a82e; --coin3: #c9860f;
+  --goldf1: #fbd86a; --goldf2: #e5ae33; --gold-border: #fce9a6; --gold-rim: #c68f1f;
+  --star1: #ffe07a; --star2: #f0a82e; --star-empty: #d8c8ac;
+  --pink1: #f06aa0; --pink2: #d84a86;
+  --purple1: #b95fe0; --purple2: #9b3fcf; --purple3: #8a35bd;
+  /* wood cabinet */
+  --wood: #b98a5e; --wood-hi: #cda277; --wood-edge: #a9784f;
+  --wood-back1: #d9b98c; --wood-back2: #c79f6f;
   --wood-dark: #8a6440;
-  --wood-edge: #6f4e30;
-  --slot: #efe2cf;
-  --slot-shadow: #cbb598;
-  --card: #fffaf2;
-  --ink: #4a3b2c;
-  --ink-soft: #8a7862;
-  --accent: #e8794b;
-  --accent-2: #f0a35b;
-  --good: #57b368;
-  --bad: #e05b54;
-  --gold: #ffc23c;
-  --r-lg: 22px;
-  --r-md: 16px;
-  --r-sm: 11px;
+  /* text */
+  --ink: #6b3b12; --ink-2: #8a4b22; --ink-soft: #8a5e3c; --ink-muted: #b5754a;
+  --stroke-win: #7a3b0c; --stroke-peach: #b24a34;
+  /* cards */
+  --card: #fff9ef; --card-2: #fffbf4;
+  /* legacy aliases kept so existing rules still resolve */
+  --accent: #e8794b; --accent-2: #f0a35b; --good: #6fb03e; --bad: #e05b54; --gold: #f0a82e;
+  --slot: #efe2cf; --slot-shadow: #cbb598;
+  /* radii */
+  --r-lg: 22px; --r-md: 16px; --r-sm: 11px;
+  /* shadows (handoff) */
+  --sh-card: 0 5px 10px rgba(120, 80, 40, 0.14);
+  --sh-cabinet: 0 10px 20px rgba(90, 60, 35, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.2);
+  --sh-cell: inset 0 3px 5px rgba(0, 0, 0, 0.18);
   --shadow-card: 0 10px 26px rgba(74, 59, 44, 0.16);
   --shadow-soft: 0 4px 12px rgba(74, 59, 44, 0.14);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
+
+/* animations from the handoff */
+@keyframes btnPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.035)} }
+@keyframes glowPulse { 0%,100%{opacity:.55;transform:scale(1)} 50%{opacity:.95;transform:scale(1.06)} }
+@keyframes popIn { 0%{transform:scale(.4);opacity:0} 70%{transform:scale(1.12)} 100%{transform:scale(1);opacity:1} }
+@keyframes confFall { 0%{transform:translateY(-40px) rotate(0);opacity:1} 100%{transform:translateY(260px) rotate(320deg);opacity:0} }
+@keyframes coinShimmer { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.18)} }
+@keyframes floaty { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-9px)} }
 
 * {
   box-sizing: border-box;
@@ -35,10 +68,10 @@ body {
 }
 
 body {
-  font-family: ui-rounded, "SF Pro Rounded", "Segoe UI Rounded", "Nunito",
+  font-family: "Baloo 2", ui-rounded, "SF Pro Rounded", "Segoe UI Rounded", "Nunito",
     "Helvetica Neue", system-ui, -apple-system, sans-serif;
   color: var(--ink);
-  background: #efd9bd;
+  background: var(--wall);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   user-select: none;
@@ -80,27 +113,44 @@ button {
   color: inherit;
 }
 
+/* sticker / pressable-3D button — 4px white outline + flat bottom rim + drop */
 .btn {
-  border-radius: 999px;
+  border-radius: 20px;
   padding: 13px 26px;
   font-size: 18px;
   font-weight: 800;
   background: var(--card);
   color: var(--ink);
-  box-shadow: var(--shadow-soft);
-  transition: transform 0.08s ease, filter 0.15s ease;
+  border: 4px solid #fff;
+  box-shadow: 0 6px 0 rgba(140, 100, 60, 0.35), 0 12px 16px rgba(120, 80, 40, 0.22);
+  transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.15s ease;
   letter-spacing: 0.2px;
 }
 .btn:active {
-  transform: translateY(2px) scale(0.98);
+  transform: translateY(5px);
+  box-shadow: 0 1px 0 rgba(140, 100, 60, 0.35), 0 4px 8px rgba(120, 80, 40, 0.22);
 }
 .btn.primary {
-  background: linear-gradient(180deg, #f28b5b, var(--accent));
+  background: linear-gradient(180deg, var(--green1), var(--green2));
   color: #fff;
-  box-shadow: 0 8px 18px rgba(232, 121, 75, 0.4);
+  border: 4px solid #fff;
+  box-shadow: 0 8px 0 var(--green-rim), 0 14px 20px rgba(60, 110, 30, 0.35);
+  text-shadow: 0 2px 0 rgba(60, 110, 30, 0.4);
+  -webkit-text-stroke: 0.6px rgba(60, 110, 30, 0.25);
+}
+.btn.primary:active {
+  transform: translateY(6px);
+  box-shadow: 0 2px 0 var(--green-rim), 0 6px 12px rgba(60, 110, 30, 0.35);
 }
 .btn.ghost {
-  background: rgba(255, 255, 255, 0.65);
+  background: linear-gradient(180deg, #fffdf8, #f3e7d3);
+  color: var(--ink);
+  border: 4px solid #fff;
+  box-shadow: 0 5px 0 rgba(160, 120, 78, 0.4), 0 9px 12px rgba(120, 80, 40, 0.18);
+}
+.btn.ghost:active {
+  transform: translateY(4px);
+  box-shadow: 0 1px 0 rgba(160, 120, 78, 0.4), 0 4px 8px rgba(120, 80, 40, 0.18);
 }
 
 .pill {
@@ -1211,3 +1261,307 @@ button {
   font-size: 15px;
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
 }
+
+/* =====================================================================
+   HAPPY TIDY REDESIGN — overrides (design handoff, hi-fi)
+   ===================================================================== */
+
+/* screen backgrounds (bg also set on the classes so it beats no inline) */
+.screen.game { background: var(--wall) !important; }
+.screen.map { background: var(--wall) !important; }
+.screen.game::before, .screen.map::before {
+  background-image: radial-gradient(rgba(120, 80, 40, 0.14) 1.4px, transparent 1.6px);
+  background-size: 26px 26px;
+  -webkit-mask: none; mask: none;
+  opacity: 0.5;
+}
+
+/* ---------- Game Board: HUD ---------- */
+.gamebar {
+  background: linear-gradient(180deg, var(--peach), var(--peach-dark));
+  margin: calc(-1 * (var(--safe-top) + 10px)) -8px 2px;
+  padding: calc(var(--safe-top) + 12px) 14px 20px;
+  border-radius: 0 0 20px 20px;
+  box-shadow: 0 6px 14px rgba(200, 110, 70, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+  position: relative;
+  z-index: 3;
+  overflow: visible;
+}
+.gamebar .progress {
+  background: var(--maroon);
+  color: #fff;
+  border-radius: 14px;
+  padding: 7px 14px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.28), 0 2px 0 rgba(0, 0, 0, 0.12);
+  backdrop-filter: none;
+}
+/* red "Nvl." plaque — overhangs the bar */
+.gamebar .level-pill {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -46%);
+  background: linear-gradient(180deg, var(--plaque1), var(--plaque2));
+  color: #fff;
+  font-weight: 800;
+  font-size: 21px;
+  padding: 9px 26px;
+  border-radius: 16px;
+  border: 3px solid var(--plaque-border);
+  box-shadow: 0 5px 0 rgba(110, 32, 20, 0.55), 0 9px 14px rgba(90, 30, 20, 0.35);
+  text-shadow: 0 2px 0 rgba(110, 32, 20, 0.5);
+  z-index: 5;
+}
+.gamebar .group { gap: 9px; }
+.gamebar .pill.coins {
+  background: #fff;
+  border-radius: 999px;
+  padding: 6px 13px 6px 10px;
+  box-shadow: 0 3px 0 rgba(200, 150, 60, 0.35);
+  color: var(--ink);
+  font-weight: 800;
+}
+.gamebar .pill.coins .ico { filter: drop-shadow(0 1px 1px rgba(180, 120, 20, 0.4)); }
+.gamebar .icon-btn {
+  width: 46px; height: 46px;
+  background: linear-gradient(180deg, var(--blue1), var(--blue2));
+  color: #fff;
+  border: 3px solid #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 0 var(--blue-rim), 0 7px 10px rgba(40, 105, 170, 0.35);
+  font-size: 18px;
+}
+.gamebar .icon-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--blue-rim); }
+
+/* combo pill tucked under the plaque */
+.combo-slot { height: 26px; margin-top: 20px; position: relative; z-index: 4; }
+.combo-pill {
+  background: linear-gradient(180deg, var(--combo1), var(--combo2));
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  padding: 3px 15px;
+  font-weight: 800;
+  font-size: 14px;
+  box-shadow: 0 3px 0 var(--green-rim), 0 5px 8px rgba(60, 110, 30, 0.35);
+  animation: popIn 0.32s ease-out;
+}
+.combo-pill::before { display: none; }
+
+/* time bar */
+.timebar { max-width: 300px; height: 14px; }
+.timebar .fill { background: linear-gradient(90deg, var(--green1), var(--green2)); }
+
+/* ---------- Game Board: cabinet ---------- */
+.cabinet {
+  background: linear-gradient(180deg, var(--wood-hi), var(--wood));
+  border: 3px solid var(--wood-edge);
+  border-radius: 16px;
+  padding: 12px;
+  gap: 10px;
+  box-shadow: var(--sh-cabinet);
+}
+.shelf {
+  background: transparent !important;
+  box-shadow: none;
+  padding: 0;
+  gap: 6px;
+}
+.slot {
+  background: linear-gradient(180deg, var(--wood-back1), var(--wood-back2));
+  border-radius: 8px;
+  box-shadow: var(--sh-cell);
+}
+.item { border-radius: 11px; }
+
+/* ---------- Game Board: booster tray ---------- */
+.powerbar {
+  background: linear-gradient(180deg, var(--tray1), var(--tray2));
+  margin: 6px -8px calc(-1 * (var(--safe-bottom) + 10px));
+  padding: 14px 10px calc(var(--safe-bottom) + 14px);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -4px 14px rgba(200, 110, 70, 0.28), inset 0 2px 0 rgba(255, 255, 255, 0.2);
+  gap: 14px;
+}
+.powerbar .power {
+  width: auto; height: auto;
+  flex: 0 1 62px; min-width: 44px; aspect-ratio: 1;
+  border-radius: 17px;
+  background: linear-gradient(180deg, var(--goldf1), var(--goldf2));
+  border: 3px solid var(--gold-border);
+  box-shadow: 0 5px 0 var(--gold-rim), 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+/* plaque a touch tighter so it never collides with the right pills on 360px */
+.gamebar .level-pill { font-size: 20px; padding: 9px 20px; }
+.powerbar .power:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--gold-rim); }
+.powerbar .power .count {
+  top: auto; bottom: -5px; right: -5px;
+  background: linear-gradient(180deg, var(--pink1), var(--pink2));
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+.powerbar .power .plabel { bottom: -18px; color: #fff; font-weight: 800; text-shadow: 0 1px 2px rgba(150, 70, 40, 0.5); }
+
+/* Bravo!/praise popup — pink sticker */
+.float.praise {
+  background: linear-gradient(180deg, var(--pink1), var(--pink2));
+  color: #fff;
+  border: 2px solid #fff;
+  border-radius: 14px;
+  padding: 4px 16px;
+  font-size: 26px;
+  -webkit-text-stroke: 0;
+  text-shadow: 0 2px 0 rgba(160, 40, 90, 0.5);
+  box-shadow: 0 5px 10px rgba(180, 50, 100, 0.35);
+  transform: rotate(-6deg);
+  animation: popIn 0.5s ease-out;
+}
+
+/* util row (undo/restart/menu) — small cream tiles */
+.util-row .icon-btn {
+  border: 3px solid #fff;
+  box-shadow: 0 4px 0 rgba(160, 120, 78, 0.35);
+  background: linear-gradient(180deg, #fffdf8, #f1e4cf);
+}
+
+/* ---------- Home ---------- */
+.screen.home {
+  background: linear-gradient(180deg, var(--home1), var(--home2) 55%, var(--home3)) !important;
+}
+.home .logo h1 { color: var(--ink); text-shadow: 0 3px 0 rgba(150, 90, 40, 0.22); }
+.home .logo p { color: var(--ink-soft); font-weight: 700; }
+.home-top .pill.coins {
+  background: #fff; color: var(--ink); font-weight: 800; position: relative;
+  border-radius: 999px; box-shadow: 0 3px 0 rgba(200, 150, 60, 0.35); backdrop-filter: none;
+}
+.pill.coins .plus {
+  position: absolute; right: -7px; top: 50%; transform: translateY(-50%);
+  width: 21px; height: 21px; border-radius: 50%;
+  background: linear-gradient(180deg, #7ed957, #4faa2c); border: 2px solid #fff;
+  color: #fff; font-weight: 800; font-size: 15px; display: grid; place-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); line-height: 1;
+}
+.home-top .icon-btn {
+  background: linear-gradient(180deg, var(--blue1), var(--blue2)); color: #fff;
+  border: 3px solid #fff; border-radius: 14px; box-shadow: 0 4px 0 var(--blue-rim), 0 7px 10px rgba(40, 105, 170, 0.3);
+}
+.home .mini-row .pill {
+  background: #fff; color: var(--ink); font-weight: 800; border: 3px solid #fff;
+  box-shadow: 0 3px 0 rgba(160, 120, 78, 0.3); backdrop-filter: none;
+}
+.big-play { font-size: 28px; animation: btnPulse 2.2s ease-in-out infinite; }
+
+/* ---------- bottom nav (Home) ---------- */
+.bottom-nav {
+  background: linear-gradient(180deg, var(--nav1), var(--nav2));
+  border-radius: 24px 24px 0 0;
+  box-shadow: 0 -3px 12px rgba(200, 150, 90, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+  padding: 10px 8px calc(var(--safe-bottom) + 8px);
+  margin: 0 -14px calc(-1 * (var(--safe-bottom) + 10px));
+}
+.nav-btn { color: var(--ink-muted); font-weight: 700; gap: 2px; }
+.nav-btn .nico { font-size: 22px; }
+.nav-btn.active { color: var(--accent); font-weight: 800; }
+.nav-btn.active .nico {
+  transform: translateY(-24px);
+  width: 60px; height: 60px; border-radius: 18px;
+  background: var(--card); border: 3px solid #fff;
+  display: grid; place-items: center; font-size: 28px;
+  box-shadow: 0 5px 0 rgba(160, 120, 78, 0.35), 0 9px 12px rgba(120, 80, 40, 0.2);
+  margin-bottom: -18px;
+}
+
+/* ---------- Level Complete (win) — full purple screen ---------- */
+.win-screen {
+  position: absolute; inset: 0; z-index: 60;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; padding: 40px 24px calc(var(--safe-bottom) + 40px);
+  background: radial-gradient(circle at 50% 34%, var(--purple1), var(--purple2) 55%, var(--purple3));
+  color: #fff; text-align: center;
+}
+.win-screen::before {
+  content: ""; position: absolute; inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1.4px, transparent 1.6px);
+  background-size: 30px 30px; opacity: 0.5; pointer-events: none;
+}
+.win-screen .big-stars { display: flex; gap: 8px; margin-bottom: 8px; }
+.win-screen .big-stars .s {
+  font-size: 46px; color: var(--star-empty); animation: popIn 0.5s ease-out both;
+}
+.win-screen .big-stars .s.on {
+  color: var(--star2); text-shadow: 0 3px 0 rgba(150, 90, 10, 0.4);
+  background: linear-gradient(180deg, var(--star1), var(--star2)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+}
+.win-screen .big-stars .s.mid { font-size: 58px; }
+.win-screen .big-stars .s:nth-child(2) { animation-delay: 0.15s; }
+.win-screen .big-stars .s:nth-child(3) { animation-delay: 0.3s; }
+.win-screen .w-level { font-weight: 700; font-size: 24px; opacity: 0.95; }
+.win-screen .w-title {
+  font-weight: 800; font-size: 48px; color: var(--star1);
+  -webkit-text-stroke: 3px var(--stroke-win); paint-order: stroke fill;
+  text-shadow: 0 4px 0 rgba(90, 40, 10, 0.35); margin: 2px 0 6px;
+}
+.win-screen .w-gift { font-size: 64px; position: relative; z-index: 1; }
+.win-screen .w-coins {
+  position: relative; margin-top: -6px; font-size: 30px; animation: coinShimmer 2s ease-in-out infinite;
+}
+.win-screen .w-actions { margin-top: 22px; display: flex; gap: 12px; align-items: center; }
+.win-screen .btn.primary { font-size: 22px; padding: 15px 40px; }
+.win-screen .icon-btn {
+  background: rgba(255, 255, 255, 0.22); color: #fff; border: 3px solid rgba(255, 255, 255, 0.4);
+  box-shadow: none;
+}
+
+/* ---------- Level Map ---------- */
+.screen.map .topbar,
+.map .topbar { }
+.map-scroll { padding-top: 6px; }
+.map .world-head { color: var(--ink-2); font-weight: 800; }
+.level-node {
+  width: 66px; height: 66px; border-radius: 20px;
+  border: 3px solid #fff; position: relative;
+  background: linear-gradient(180deg, var(--goldf1), var(--goldf2));
+  box-shadow: 0 5px 0 var(--gold-rim), 0 8px 12px rgba(0, 0, 0, 0.18);
+  color: #fff;
+}
+.level-node .lvnum { font-size: 22px; font-weight: 800; text-shadow: 0 2px 0 rgba(150, 100, 10, 0.4); }
+.level-node.done { background: linear-gradient(180deg, var(--goldf1), var(--goldf2)); }
+.level-node.locked {
+  background: linear-gradient(180deg, #cbbba3, #b3a088);
+  box-shadow: 0 5px 0 #9c8b71, 0 8px 12px rgba(0, 0, 0, 0.15);
+}
+/* the "current" (first unlocked, not done) node = green + pulse */
+.level-node.current {
+  width: 78px; height: 78px;
+  background: linear-gradient(180deg, var(--green1), var(--green2));
+  box-shadow: 0 6px 0 var(--green-rim), 0 10px 14px rgba(60, 110, 30, 0.3);
+  animation: btnPulse 2s ease-in-out infinite;
+}
+.level-node .node-stars { position: absolute; bottom: -9px; left: 50%; transform: translateX(-50%); }
+
+/* ---------- Shop / Settings / modal cards ---------- */
+.overlay { background: rgba(50, 30, 15, 0.5); }
+.modal { border: 4px solid #fff; box-shadow: 0 18px 40px rgba(60, 35, 15, 0.4); border-radius: 24px; }
+.modal h2 { color: var(--accent); -webkit-text-stroke: 0; text-shadow: 0 2px 0 rgba(180, 100, 40, 0.18); }
+.modal.shop { background: var(--wall-shop); }
+.shop-row { background: var(--card); border: 3px solid #fff; border-radius: 16px; box-shadow: var(--sh-card); }
+.shop-ico {
+  background: linear-gradient(180deg, var(--goldf1), var(--goldf2)); border: 3px solid var(--gold-border);
+  border-radius: 14px; box-shadow: 0 3px 0 var(--gold-rim);
+}
+.btn.buy {
+  background: linear-gradient(180deg, var(--goldf1), var(--goldf2)); color: #6a4a10;
+  border: 3px solid #fff; box-shadow: 0 4px 0 var(--gold-rim); border-radius: 14px;
+}
+.setting { color: var(--ink); font-weight: 700; }
+
+/* ---------- Tutorial / coach card ---------- */
+.tut .bubble {
+  background: var(--card); border: 4px solid #fff; border-radius: 26px;
+  box-shadow: 0 14px 30px rgba(60, 35, 15, 0.35); color: var(--ink); font-weight: 700;
+}
+.tut .bubble .coach-title {
+  color: var(--accent); font-weight: 800; font-size: 20px; margin-bottom: 6px;
+  text-shadow: 0 2px 0 rgba(180, 100, 40, 0.2);
+}
+.tut .hand { animation: floaty 1.6s ease-in-out infinite; }
