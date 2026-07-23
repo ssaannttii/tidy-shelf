@@ -10,7 +10,7 @@
 import { writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
-import { boardFromLevel, resolveClears, cloneBoard } from "../src/lib/engine";
+import { boardFromLevel, resolveClears, cloneBoard, computeNeighbors } from "../src/lib/engine";
 import { solve } from "../src/lib/solver";
 import { WORLD_POOLS } from "../src/lib/items";
 import type { Difficulty, ItemType, LevelData } from "../src/lib/types";
@@ -45,6 +45,28 @@ interface Spec {
   maxDepth: number;
   emptySlots: number; // buffer of empty slots
   difficulty: Difficulty;
+  crates: number; // obstacles: crates placed on top of slots
+  locked: number; // obstacles: shelves that start locked
+}
+
+/**
+ * Gentle obstacle introduction, one mechanic at a time:
+ *  W1 none (teach base) · W2 crates (from mid-world) · W3+ crates + a locked
+ *  shelf · W5 the wringer. Placement is still verified solvable per level.
+ */
+function obstacleCounts(world: number, idx: number): { crates: number; locked: number } {
+  switch (world) {
+    case 1:
+      return { crates: 0, locked: 0 };
+    case 2:
+      return { crates: idx < 2 ? 0 : idx < 6 ? 1 : 2, locked: idx >= 5 ? 1 : 0 };
+    case 3:
+      return { crates: idx < 2 ? 1 : 2, locked: 1 };
+    case 4:
+      return { crates: 2, locked: 1 };
+    default:
+      return { crates: idx < 4 ? 2 : 3, locked: idx >= 3 ? 2 : 1 };
+  }
 }
 
 const SLOTS = 3;
@@ -52,7 +74,7 @@ const SLOTS = 3;
 // Difficulty curve: 8 levels per world, 5 worlds = 40 levels.
 function buildSpecs(): Spec[] {
   const specs: Spec[] = [];
-  const perWorld: Omit<Spec, "world">[][] = [
+  const perWorld: Omit<Spec, "world" | "crates" | "locked">[][] = [
     // World 1 — Pantry (teach the basics)
     [
       { types: 2, shelves: 4, maxDepth: 1, emptySlots: 6, difficulty: "easy" },
@@ -110,9 +132,64 @@ function buildSpecs(): Spec[] {
     ],
   ];
   for (let w = 0; w < perWorld.length; w++) {
-    for (const s of perWorld[w]) specs.push({ world: w + 1, ...s });
+    let idx = 0;
+    for (const s of perWorld[w]) {
+      specs.push({ world: w + 1, ...s, ...obstacleCounts(w + 1, idx) });
+      idx++;
+    }
   }
   return specs;
+}
+
+/**
+ * Try to place `spec.crates` crates (on top of slots) and `spec.locked` locked
+ * shelves so the level stays solvable with the obstacle-aware solver. Mutates
+ * `level.crates` / `level.locked` on success; leaves them undefined on failure.
+ * Returns the solver result for the obstacled board (or null if none worked).
+ */
+function placeObstacles(level: LevelData, spec: Spec, rnd: () => number, basePar: number) {
+  if (spec.crates <= 0 && spec.locked <= 0) return null;
+  const n = level.shelves.length;
+  const neighbors = computeNeighbors(level.layout, n);
+  const withNeighbor: number[] = [];
+  for (let s = 0; s < n; s++) if (neighbors[s].length > 0) withNeighbor.push(s);
+
+  // Obstacles add moves, but must not explode the puzzle into a rambling mess
+  // (which happens when BFS gives up and greedy returns a very long path).
+  const tightCap = basePar * 2 + 8;
+  const looseCap = basePar * 3 + 12;
+  let best: { crates?: LevelData["crates"]; locked?: number[]; res: ReturnType<typeof solve> } | null = null;
+
+  for (let attempt = 0; attempt < 60; attempt++) {
+    const crates: NonNullable<LevelData["crates"]> = [];
+    const nonEmpty: { shelf: number; slot: number }[] = [];
+    for (const s of withNeighbor)
+      for (let j = 0; j < level.shelves[s].length; j++)
+        if (level.shelves[s][j].length > 0) nonEmpty.push({ shelf: s, slot: j });
+    for (const cand of shuffle(nonEmpty, rnd).slice(0, spec.crates)) {
+      crates.push({ shelf: cand.shelf, slot: cand.slot, hits: 1 });
+    }
+    const crateShelves = new Set(crates.map((c) => c.shelf));
+    const locked = shuffle(withNeighbor.filter((s) => !crateShelves.has(s)), rnd).slice(0, spec.locked);
+
+    level.crates = crates.length ? crates : undefined;
+    level.locked = locked.length ? locked : undefined;
+
+    const res = solve(boardFromLevel(level), 300000);
+    if (!res.solvable) continue;
+    if (res.par <= tightCap) return res; // great — accept immediately
+    if (!best || res.par < best.res.par) best = { crates: level.crates, locked: level.locked, res };
+  }
+
+  // no tight placement found; take the least-bad one if it's still reasonable
+  if (best && best.res.par <= looseCap) {
+    level.crates = best.crates;
+    level.locked = best.locked;
+    return best.res;
+  }
+  level.crates = undefined;
+  level.locked = undefined;
+  return null;
 }
 
 // ---- irregular cabinet layout -------------------------------------------
@@ -267,9 +344,13 @@ function main() {
       if (!res.solvable) continue;
 
       const N = types.length * 3;
-      level.par = res.par;
-      level.parExact = res.exact;
-      level.timeLimit = timeLimitFor(res.par, N, spec.difficulty);
+      // place crates / locked shelves (kept solvable), then recompute par + time
+      const obsRes = placeObstacles(level, spec, rnd, res.par);
+      const finalRes = obsRes ?? res;
+      const extra = level.crates?.length ?? 0;
+      level.par = finalRes.par;
+      level.parExact = finalRes.exact;
+      level.timeLimit = timeLimitFor(finalRes.par, N + extra, spec.difficulty);
       built = level;
     }
 
@@ -301,8 +382,9 @@ function main() {
 
     id++;
     levels.push(built);
+    const obs = `${built.crates?.length ? `${built.crates.length}📦` : ""}${built.locked?.length ? `${built.locked.length}🔒` : ""}`;
     console.log(
-      `L${built.id} w${built.world} ${built.difficulty}\t${built.types.length} types\t${built.shelves.length} shelves\tpar ${built.par}${built.parExact ? "" : "~"}\t${built.timeLimit}s`,
+      `L${built.id} w${built.world} ${built.difficulty}\t${built.types.length} types\t${built.shelves.length} shelves\tpar ${built.par}${built.parExact ? "" : "~"}\t${built.timeLimit}s\t${obs}`,
     );
   }
 

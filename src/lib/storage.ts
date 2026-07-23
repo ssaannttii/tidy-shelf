@@ -6,6 +6,8 @@ export interface Progress {
   sound: boolean;
   relax: boolean;
   seenTutorial: boolean;
+  /** first-time tutorial flags per mechanic (crate/lock/gift/frozen/chained). */
+  seenMech: Record<string, boolean>;
   bought: Partial<Record<string, number>>;
 }
 
@@ -20,6 +22,7 @@ export function defaultProgress(): Progress {
     sound: true,
     relax: false,
     seenTutorial: false,
+    seenMech: {},
     bought: {},
   };
 }
@@ -35,6 +38,7 @@ export function loadProgress(): Progress {
       ...p,
       stars: p.stars ?? {},
       bestMoves: p.bestMoves ?? {},
+      seenMech: p.seenMech ?? {},
     };
   } catch {
     return defaultProgress();

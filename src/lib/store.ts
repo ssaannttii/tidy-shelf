@@ -134,6 +134,7 @@ interface GameStore {
   hydrate: () => void;
   setSound: (v: boolean) => void;
   setRelax: (v: boolean) => void;
+  seeMech: (m: string) => void;
   goHome: () => void;
   goMap: () => void;
   startLevel: (id: number) => void;
@@ -278,7 +279,7 @@ export const useGame = create<GameStore>((set, get) => {
       return;
     }
     const cell = s.board.shelves[shelf]?.[slot];
-    if (!cell || cell.length === 0 || s.powerups.hammer <= 0) {
+    if (!cell || cell.length === 0 || s.board.locked[shelf] || s.powerups.hammer <= 0) {
       set({ hammerArmed: false, selected: null });
       return;
     }
@@ -292,7 +293,15 @@ export const useGame = create<GameStore>((set, get) => {
       powerups: { ...s.powerups },
     };
     const nb = cloneBoard(s.board);
-    nb.shelves[shelf][slot].pop();
+    const slotArr = nb.shelves[shelf][slot];
+    const f = slotArr[slotArr.length - 1];
+    if (f && f.k === "crate") {
+      // smashing a crate chips a hit; only pops when broken
+      f.hits -= 1;
+      if (f.hits <= 0) slotArr.pop();
+    } else {
+      slotArr.pop(); // item or gift: remove it
+    }
     const clears = resolveClears(nb);
     set({
       history: [...s.history, snapshot].slice(-80),
@@ -379,6 +388,12 @@ export const useGame = create<GameStore>((set, get) => {
     },
     setRelax: (v) => {
       commitProgress({ ...get().progress, relax: v });
+    },
+
+    seeMech: (m) => {
+      const s = get();
+      if (s.progress.seenMech?.[m]) return;
+      commitProgress({ ...s.progress, seenMech: { ...s.progress.seenMech, [m]: true } });
     },
 
     goHome: () => set({ screen: "home", selected: null, hammerArmed: false }),

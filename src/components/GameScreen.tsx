@@ -5,7 +5,7 @@ import { itemsRemaining } from "../lib/engine";
 import { worldMeta } from "../lib/items";
 import { fmtTime } from "./ui";
 import Board from "./Board";
-import { WinModal, LoseModal, SettingsModal, Tutorial, ShopModal, Confetti } from "./Modals";
+import { WinModal, LoseModal, SettingsModal, Tutorial, MechTutorial, ShopModal, Confetti } from "./Modals";
 
 const POWERS: { id: PowerId; icon: string; label: string }[] = [
   { id: "hammer", icon: "🔨", label: "Smash" },
@@ -23,6 +23,8 @@ export default function GameScreen() {
   const coins = useGame((s) => s.progress.coins);
   const relax = useGame((s) => s.progress.relax);
   const stars1 = useGame((s) => s.progress.stars[1] ?? 0);
+  const seenMech = useGame((s) => s.progress.seenMech);
+  const seeMech = useGame((s) => s.seeMech);
   const timeLeftMs = useGame((s) => s.timeLeftMs);
   const combo = useGame((s) => s.combo);
   const freezeMs = useGame((s) => s.freezeMs);
@@ -48,6 +50,13 @@ export default function GameScreen() {
   const pct = totalMs > 0 ? Math.max(0, (timeLeftMs / totalMs) * 100) : 0;
   const low = !relax && timeLeftMs <= 15000;
   const showTut = level.id === 1 && stars1 === 0 && !tutClosed && status === "playing";
+  const mechs: string[] = [];
+  if (level.crates?.length) mechs.push("crate");
+  if (level.locked?.length) mechs.push("lock");
+  if (level.gifts?.length) mechs.push("gift");
+  if (level.frozen?.length) mechs.push("frozen");
+  if (level.chained?.length) mechs.push("chained");
+  const pendingMech = status === "playing" && !showTut ? mechs.find((m) => !seenMech?.[m]) : undefined;
 
   return (
     <div
@@ -164,6 +173,7 @@ export default function GameScreen() {
       {settings && <SettingsModal onClose={() => setSettings(false)} />}
       {shop && <ShopModal onClose={() => setShop(false)} />}
       {showTut && <Tutorial onClose={() => setTutClosed(true)} />}
+      {pendingMech && <MechTutorial mech={pendingMech} onClose={() => seeMech(pendingMech)} />}
     </div>
   );
 }

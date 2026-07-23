@@ -22,8 +22,11 @@ for (const level of LEVELS) {
     console.error(`L${level.id}: starts with ${startClears.length} auto-clears!`);
     failures++;
   }
-  if (items % 3 !== 0) {
-    console.error(`L${level.id}: item count ${items} not divisible by 3`);
+  // only true items must come in triples; crates/gifts are obstacles
+  let itemCells = 0;
+  for (const sh of board.shelves) for (const sl of sh) for (const c of sl) if (c.k === "item") itemCells++;
+  if (itemCells % 3 !== 0) {
+    console.error(`L${level.id}: item count ${itemCells} not divisible by 3`);
     failures++;
   }
 

@@ -30,6 +30,18 @@ export interface LevelData {
   par: number;
   /** Whether par is exact (BFS optimal) or an upper bound (DFS). */
   parExact: boolean;
+
+  // ---- optional obstacles (v2; absent = none, so v1 levels are unchanged) ----
+  /** Shelves that start locked (inert until a neighbour clears). */
+  locked?: number[];
+  /** Crates placed on top of a slot; break when a neighbour clears (or hammer). */
+  crates?: { shelf: number; slot: number; hits?: number }[];
+  /** Gift boxes; open into `drop` when a neighbour clears. */
+  gifts?: { shelf: number; slot: number; drop: ItemType }[];
+  /** Frozen fronts; thaw after `n` neighbour clears (default 1). */
+  frozen?: { shelf: number; slot: number; n?: number }[];
+  /** Chained fronts; can't be moved until a neighbour clears. */
+  chained?: { shelf: number; slot: number }[];
 }
 
 export interface WorldMeta {

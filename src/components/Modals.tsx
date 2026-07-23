@@ -240,3 +240,64 @@ export function Tutorial({ onClose }: { onClose: () => void }) {
     </div>
   );
 }
+
+const MECH_TUT: Record<string, { icon: string; text: React.ReactNode }> = {
+  crate: {
+    icon: "📦",
+    text: (
+      <>
+        Clear a shelf <b>right next to a crate</b> to smash it — or use the 🔨 hammer.
+      </>
+    ),
+  },
+  lock: {
+    icon: "🔒",
+    text: (
+      <>
+        A <b>locked shelf</b> opens when you clear a shelf next to it.
+      </>
+    ),
+  },
+  gift: {
+    icon: "🎁",
+    text: (
+      <>
+        Clear next to a <b>gift box</b> to open it and reveal an item.
+      </>
+    ),
+  },
+  frozen: {
+    icon: "❄️",
+    text: (
+      <>
+        A <b>frozen</b> item thaws when you clear a shelf beside it.
+      </>
+    ),
+  },
+  chained: {
+    icon: "⛓️",
+    text: (
+      <>
+        A <b>chained</b> item can&apos;t move until you clear a shelf next to it.
+      </>
+    ),
+  },
+};
+
+export function MechTutorial({ mech, onClose }: { mech: string; onClose: () => void }) {
+  const t = MECH_TUT[mech];
+  if (!t) return null;
+  return (
+    <div className="tut">
+      <div className="bubble">
+        <div className="hand">{t.icon}</div>
+        {t.text}
+        <div>
+          <button className="btn primary" onClick={onClose}>
+            Got it
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

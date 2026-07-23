@@ -102,19 +102,33 @@ export function computeNeighbors(layout: (number | null)[][], nShelves: number):
 
 // ---- construction --------------------------------------------------------
 
-interface LevelWithObstacles extends LevelData {
-  /** optional v2 fields (added by later phases; absent = none) */
-  locked?: number[];
-}
-
 export function boardFromLevel(level: LevelData): Board {
   const shelves: Slot[][] = level.shelves.map((shelf) =>
     shelf.map((slot) => slot.map((t) => ({ k: "item", t }) as Cell)),
   );
   const nShelves = shelves.length;
-  const lockedList = (level as LevelWithObstacles).locked ?? [];
+  const has = (s: number, j: number) => shelves[s]?.[j] !== undefined;
+
+  // frozen / chained: modify the FRONT item cell at (shelf, slot)
+  for (const { shelf, slot, n } of level.frozen ?? []) {
+    const f = has(shelf, slot) ? front(shelves[shelf][slot]) : null;
+    if (f && f.k === "item") f.frozen = Math.max(1, n ?? 1);
+  }
+  for (const { shelf, slot } of level.chained ?? []) {
+    const f = has(shelf, slot) ? front(shelves[shelf][slot]) : null;
+    if (f && f.k === "item") f.chained = true;
+  }
+  // crates / gifts: pushed ON TOP of a slot (become the new front)
+  for (const { shelf, slot, hits } of level.crates ?? []) {
+    if (has(shelf, slot)) shelves[shelf][slot].push({ k: "crate", hits: Math.max(1, hits ?? 1) });
+  }
+  for (const { shelf, slot, drop } of level.gifts ?? []) {
+    if (has(shelf, slot)) shelves[shelf][slot].push({ k: "gift", drop });
+  }
+
   const locked = new Array(nShelves).fill(false);
-  for (const s of lockedList) if (s >= 0 && s < nShelves) locked[s] = true;
+  for (const s of level.locked ?? []) if (s >= 0 && s < nShelves) locked[s] = true;
+
   return {
     shelves,
     slotsPerShelf: level.slotsPerShelf,
