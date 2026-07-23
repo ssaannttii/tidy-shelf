@@ -1286,7 +1286,15 @@ button {
   position: relative;
   z-index: 3;
   overflow: visible;
+  /* 3 columns so the centred level plaque reserves its own space and can never
+     overlap the progress or coins pills, at any level number or coin count. */
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
 }
+.gamebar .progress { justify-self: start; }
+.gamebar .group { justify-self: end; }
 .gamebar .progress {
   background: var(--maroon);
   color: #fff;
@@ -1295,17 +1303,16 @@ button {
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.28), 0 2px 0 rgba(0, 0, 0, 0.12);
   backdrop-filter: none;
 }
-/* red "Nvl." plaque — overhangs the bar */
+/* red "Nvl." plaque — centred in its own column, overhangs downward */
 .gamebar .level-pill {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -46%);
+  justify-self: center;
+  transform: translateY(9px);
+  white-space: nowrap;
   background: linear-gradient(180deg, var(--plaque1), var(--plaque2));
   color: #fff;
   font-weight: 800;
-  font-size: 21px;
-  padding: 9px 26px;
+  font-size: 20px;
+  padding: 8px 22px;
   border-radius: 16px;
   border: 3px solid var(--plaque-border);
   box-shadow: 0 5px 0 rgba(110, 32, 20, 0.55), 0 9px 14px rgba(90, 30, 20, 0.35);
@@ -1352,27 +1359,127 @@ button {
 .timebar { max-width: 300px; height: 14px; }
 .timebar .fill { background: linear-gradient(90deg, var(--green1), var(--green2)); }
 
-/* ---------- Game Board: cabinet ---------- */
+/* ---------- Game Board: cabinet + shelf compartments (design handoff) ---------- */
 .cabinet {
   background: linear-gradient(180deg, var(--wood-hi), var(--wood));
-  border: 3px solid var(--wood-edge);
+  border: 4px solid var(--wood-edge);
   border-radius: 16px;
-  padding: 12px;
-  gap: 10px;
+  padding: 9px;
+  gap: 9px;
   box-shadow: var(--sh-cabinet);
+  --shelf-gap: 8px; /* clear dark-frame gap BETWEEN compartments */
 }
+/* Each shelf is ONE wood-back compartment; the goods stand on its floor.
+   This is what makes a "shelf" (the trio that clears together) read as a single
+   unit, clearly distinct from its neighbours. */
 .shelf {
+  display: flex !important;
+  flex-direction: row;
+  align-items: flex-end; /* stand the goods on the shelf floor */
+  gap: 3px; /* goods within a shelf sit close together */
+  padding: 4px 5px 6px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, var(--wood-back1), var(--wood-back2)) !important;
+  background-image: none !important;
+  box-shadow: var(--sh-cell), inset 0 -6px 0 rgba(74, 47, 22, 0.26);
+  aspect-ratio: var(--slots) / 1.72; /* short, wide compartment like the design */
+}
+.shelf.gap {
   background: transparent !important;
-  box-shadow: none;
-  padding: 0;
-  gap: 6px;
+  box-shadow: none !important;
 }
 .slot {
-  background: linear-gradient(180deg, var(--wood-back1), var(--wood-back2));
-  border-radius: 8px;
-  box-shadow: var(--sh-cell);
+  flex: 1 1 0;
+  height: 100%;
+  min-width: 0;
+  aspect-ratio: auto;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-radius: 6px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  place-items: unset;
 }
-.item { border-radius: 11px; }
+
+/* the SVG good sitting on the shelf */
+.good {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.good-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+.good .badge {
+  position: absolute;
+  top: 0;
+  right: 2px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--wood-edge);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+.good .chain {
+  position: absolute;
+  bottom: 26%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(12px, 34cqmin, 20px);
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+}
+.good.obstacle .glyph {
+  font-size: clamp(20px, 66cqmin, 44px);
+  line-height: 1;
+  padding-bottom: 4%;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.2));
+}
+.good.frozen::after {
+  content: "";
+  position: absolute;
+  inset: 8% 8% 4%;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(190, 230, 255, 0.72), rgba(142, 201, 242, 0.62));
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+
+/* interaction states target the good, not a square tile */
+.slot.selected {
+  outline: 3px solid var(--gold);
+  outline-offset: -2px;
+  border-radius: 7px;
+}
+.slot.selected .good {
+  transform: translateY(-7px) scale(1.05);
+}
+.slot.selected .good-svg {
+  filter: drop-shadow(0 8px 8px rgba(0, 0, 0, 0.28));
+}
+.slot.hint-from,
+.slot.hint-to {
+  border-radius: 7px;
+}
+.slot.drop-ok {
+  background: rgba(155, 224, 91, 0.42) !important;
+  outline: 2px dashed var(--good);
+  outline-offset: -3px;
+  border-radius: 7px;
+}
 
 /* ---------- Game Board: booster tray ---------- */
 .powerbar {
@@ -1393,6 +1500,14 @@ button {
 }
 /* plaque a touch tighter so it never collides with the right pills on 360px */
 .gamebar .level-pill { font-size: 20px; padding: 9px 20px; }
+/* small phones: shrink the HUD so progress + plaque + coins + pause always fit */
+@media (max-width: 360px) {
+  .gamebar { padding-left: 8px; padding-right: 8px; gap: 5px; }
+  .gamebar .level-pill { font-size: 16px; padding: 6px 12px; }
+  .gamebar .pill.coins { padding: 5px 9px 5px 8px; font-size: 14px; }
+  .gamebar .pill.progress { padding: 6px 10px; font-size: 14px; }
+  .gamebar .icon-btn { width: 40px; height: 40px; font-size: 16px; }
+}
 .powerbar .power:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--gold-rim); }
 .powerbar .power .count {
   top: auto; bottom: -5px; right: -5px;

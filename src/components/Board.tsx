@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useGame } from "../lib/store";
-import { itemTint } from "../lib/items";
+import { Good } from "./Good";
 
 const SHRED_COLORS = ["#ffffff", "#fff2cf", "#ffd7c8", "#d6eccf", "#d3e6ff", "#f0d7f2"];
 
@@ -215,21 +215,20 @@ export default function Board() {
                         {top &&
                           (top.k === "item" ? (
                             <div
-                              className={`item ${stack.length > 1 ? "depth" : ""} ${top.frozen ? "frozen" : ""} ${
+                              className={`good ${stack.length > 1 ? "depth" : ""} ${top.frozen ? "frozen" : ""} ${
                                 top.chained ? "chained" : ""
                               }`}
-                              style={{ background: itemTint(top.t) }}
                             >
-                              <span className="glyph">{top.t}</span>
+                              <Good type={top.t} />
                               {stack.length > 1 && <span className="badge">{stack.length}</span>}
                               {top.chained ? <span className="chain">⛓️</span> : null}
                             </div>
                           ) : top.k === "crate" ? (
-                            <div className="item obstacle crate">
+                            <div className="good obstacle crate">
                               <span className="glyph">📦</span>
                             </div>
                           ) : (
-                            <div className="item obstacle gift">
+                            <div className="good obstacle gift">
                               <span className="glyph">🎁</span>
                             </div>
                           ))}
