@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useGame } from "../lib/store";
 import { Good } from "./Good";
+import type { ItemType } from "../lib/types";
 
 const SHRED_COLORS = ["#ffffff", "#fff2cf", "#ffd7c8", "#d6eccf", "#d3e6ff", "#f0d7f2"];
 
@@ -49,16 +50,22 @@ interface DownInfo {
   x: number;
   y: number;
   hadItem: boolean;
+  movable: boolean;
+  type: ItemType | null;
 }
 
-function slotFromPoint(x: number, y: number): { shelf: number; slot: number } | null {
+function slotElFromPoint(x: number, y: number): { shelf: number; slot: number; el: HTMLElement } | null {
   const el = document.elementFromPoint(x, y);
   const slotEl = el?.closest?.(".slot") as HTMLElement | null;
   if (!slotEl) return null;
   const shelf = Number(slotEl.dataset.shelf);
   const slot = Number(slotEl.dataset.slot);
   if (Number.isNaN(shelf) || Number.isNaN(slot)) return null;
-  return { shelf, slot };
+  return { shelf, slot, el: slotEl };
+}
+
+function slotEl(shelf: number, slot: number): HTMLElement | null {
+  return document.querySelector(`.slot[data-shelf="${shelf}"][data-slot="${slot}"]`);
 }
 
 export default function Board() {
@@ -74,12 +81,16 @@ export default function Board() {
 
   const [pulsing, setPulsing] = useState<Record<number, boolean>>({});
   const [dropTarget, setDropTarget] = useState<{ shelf: number; slot: number } | null>(null);
-  const [liftSource, setLiftSource] = useState<{ shelf: number; slot: number } | null>(null);
+  const [dragSrc, setDragSrc] = useState<{ shelf: number; slot: number } | null>(null);
+  const [dragType, setDragType] = useState<ItemType | null>(null);
   const [shaking, setShaking] = useState(false);
 
   const down = useRef<DownInfo | null>(null);
-  const moving = useRef(false);
+  const dragging = useRef(false);
   const prevPulse = useRef<number[]>([]);
+  const ghostRef = useRef<HTMLDivElement | null>(null);
+  const ghostSize = useRef({ w: 40, h: 60 });
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // shelf clear pulse
   useEffect(() => {
@@ -115,37 +126,108 @@ export default function Board() {
     return () => clearTimeout(t);
   }, [shake]);
 
-  useEffect(() => {
-    function onMove(e: PointerEvent) {
-      if (!down.current) return;
-      const dx = e.clientX - down.current.x;
-      const dy = e.clientY - down.current.y;
-      if (!moving.current && Math.hypot(dx, dy) > 9 && down.current.hadItem) {
-        moving.current = true;
-        setLiftSource({ shelf: down.current.shelf, slot: down.current.slot });
-      }
-      if (moving.current) {
-        const t = slotFromPoint(e.clientX, e.clientY);
-        if (t && board.shelves[t.shelf]?.[t.slot]?.length === 0) setDropTarget(t);
-        else setDropTarget(null);
-      }
+  useEffect(
+    () => () => {
+      if (settleTimer.current) clearTimeout(settleTimer.current);
+    },
+    [],
+  );
+
+  // position the floating ghost above the finger
+  function placeGhost(x: number, y: number, lifted: boolean) {
+    const g = ghostRef.current;
+    if (!g) return;
+    const { w, h } = ghostSize.current;
+    g.style.transition = "none";
+    g.style.transform = `translate(${x - w / 2}px, ${y - h * 0.86}px) scale(${lifted ? 1.1 : 1})`;
+  }
+
+  function endDrag() {
+    dragging.current = false;
+    setDragSrc(null);
+    setDragType(null);
+    setDropTarget(null);
+    const g = ghostRef.current;
+    if (g) {
+      g.style.transition = "none";
+      g.style.opacity = "0";
     }
+  }
+
+  useEffect(() => {
+    function beginDrag(d: DownInfo, x: number, y: number) {
+      const srcEl = slotEl(d.shelf, d.slot);
+      const goodEl = srcEl?.querySelector(".good") as HTMLElement | null;
+      const r = (goodEl ?? srcEl)?.getBoundingClientRect();
+      ghostSize.current = { w: r?.width || 40, h: r?.height || 60 };
+      dragging.current = true;
+      setDragType(d.type);
+      setDragSrc({ shelf: d.shelf, slot: d.slot });
+      // show + place the ghost (opacity reset after last drag's fade-out)
+      const g = ghostRef.current;
+      if (g) {
+        g.style.setProperty("--gw", `${ghostSize.current.w}px`);
+        g.style.setProperty("--gh", `${ghostSize.current.h}px`);
+        g.style.opacity = "1";
+      }
+      placeGhost(x, y, true);
+    }
+
+    function onMove(e: PointerEvent) {
+      const d = down.current;
+      if (!d) return;
+      if (!dragging.current) {
+        const dist = Math.hypot(e.clientX - d.x, e.clientY - d.y);
+        if (dist > 8 && d.movable) beginDrag(d, e.clientX, e.clientY);
+        else return;
+      }
+      placeGhost(e.clientX, e.clientY, true);
+      const t = slotElFromPoint(e.clientX, e.clientY);
+      if (t && board.shelves[t.shelf]?.[t.slot]?.length === 0) setDropTarget({ shelf: t.shelf, slot: t.slot });
+      else setDropTarget(null);
+    }
+
+    function settleAndCommit(rect: DOMRect, from: { shelf: number; slot: number }, to: { shelf: number; slot: number }) {
+      const g = ghostRef.current;
+      const { w, h } = ghostSize.current;
+      if (g) {
+        g.style.transition = "transform .17s cubic-bezier(.2,.75,.3,1.08)";
+        g.style.transform = `translate(${rect.left + rect.width / 2 - w / 2}px, ${rect.bottom - h - 4}px) scale(1)`;
+      }
+      settleTimer.current = setTimeout(() => {
+        dragMove(from, to);
+        endDrag();
+      }, 165);
+    }
+
+    function settleBack(from: { shelf: number; slot: number }) {
+      const el = slotEl(from.shelf, from.slot);
+      const rect = el?.getBoundingClientRect();
+      const g = ghostRef.current;
+      if (g && rect) {
+        const { w, h } = ghostSize.current;
+        g.style.transition = "transform .16s ease-out";
+        g.style.transform = `translate(${rect.left + rect.width / 2 - w / 2}px, ${rect.bottom - h - 4}px) scale(1)`;
+      }
+      settleTimer.current = setTimeout(endDrag, 155);
+    }
+
     function onUp(e: PointerEvent) {
       const d = down.current;
       down.current = null;
       if (!d) return;
-      if (moving.current) {
-        const t = slotFromPoint(e.clientX, e.clientY);
-        if (t && !(t.shelf === d.shelf && t.slot === d.slot)) {
-          dragMove({ shelf: d.shelf, slot: d.slot }, { shelf: t.shelf, slot: t.slot });
+      if (dragging.current) {
+        const t = slotElFromPoint(e.clientX, e.clientY);
+        if (t && !(t.shelf === d.shelf && t.slot === d.slot) && board.shelves[t.shelf]?.[t.slot]?.length === 0) {
+          settleAndCommit(t.el.getBoundingClientRect(), { shelf: d.shelf, slot: d.slot }, { shelf: t.shelf, slot: t.slot });
+        } else {
+          settleBack({ shelf: d.shelf, slot: d.slot });
         }
       } else {
         tapSlot(d.shelf, d.slot);
       }
-      moving.current = false;
-      setDropTarget(null);
-      setLiftSource(null);
     }
+
     window.addEventListener("pointermove", onMove, { passive: true });
     window.addEventListener("pointerup", onUp);
     window.addEventListener("pointercancel", onUp);
@@ -162,9 +244,19 @@ export default function Board() {
     const shelf = Number(target.dataset.shelf);
     const slot = Number(target.dataset.slot);
     if (Number.isNaN(shelf) || Number.isNaN(slot)) return;
-    const hadItem = (board.shelves[shelf]?.[slot]?.length ?? 0) > 0;
-    down.current = { shelf, slot, x: e.clientX, y: e.clientY, hadItem };
-    moving.current = false;
+    const stack = board.shelves[shelf]?.[slot];
+    const front = stack?.[stack.length - 1];
+    const movable = !!front && front.k === "item" && !front.chained && !front.frozen;
+    down.current = {
+      shelf,
+      slot,
+      x: e.clientX,
+      y: e.clientY,
+      hadItem: (stack?.length ?? 0) > 0,
+      movable,
+      type: front && front.k === "item" ? front.t : null,
+    };
+    dragging.current = false;
   }
 
   if (!level) return null;
@@ -177,7 +269,7 @@ export default function Board() {
   return (
     <div className="board-wrap">
       <div
-        className={`cabinet ${shaking ? "shake" : ""} ${hammerArmed ? "armed" : ""}`}
+        className={`cabinet ${shaking ? "shake" : ""} ${hammerArmed ? "armed" : ""} ${dragSrc ? "dragging" : ""}`}
         onPointerDown={onPointerDown}
         style={{ "--cols": cols } as React.CSSProperties}
       >
@@ -197,13 +289,15 @@ export default function Board() {
                   {shelf.map((stack, si) => {
                     const top = stack[stack.length - 1];
                     const isSel = selected?.shelf === cell && selected?.slot === si;
-                    const isLift = liftSource?.shelf === cell && liftSource?.slot === si;
+                    const isSrc = dragSrc?.shelf === cell && dragSrc?.slot === si;
                     const isDrop = dropTarget?.shelf === cell && dropTarget?.slot === si;
                     const isHintFrom = hint && hint.fromShelf === cell && hint.fromSlot === si;
                     const isHintTo = hint && hint.toShelf === cell && hint.toSlot === si;
+                    const behind = stack.length - 1;
                     const cls = [
                       "slot",
-                      isSel || isLift ? "selected" : "",
+                      isSel ? "selected" : "",
+                      isSrc ? "drag-src" : "",
                       isDrop ? "drop-ok" : "",
                       isHintFrom ? "hint-from" : "",
                       isHintTo ? "hint-to" : "",
@@ -215,12 +309,13 @@ export default function Board() {
                         {top &&
                           (top.k === "item" ? (
                             <div
-                              className={`good ${stack.length > 1 ? "depth" : ""} ${top.frozen ? "frozen" : ""} ${
+                              className={`good ${behind > 0 ? "depth" : ""} ${top.frozen ? "frozen" : ""} ${
                                 top.chained ? "chained" : ""
                               }`}
                             >
+                              {behind > 0 && <span className="depth-cards" aria-hidden />}
                               <Good type={top.t} />
-                              {stack.length > 1 && <span className="badge">{stack.length}</span>}
+                              {behind > 0 && <span className="badge">{stack.length}</span>}
                               {top.chained ? <span className="chain">⛓️</span> : null}
                             </div>
                           ) : top.k === "crate" ? (
@@ -241,6 +336,11 @@ export default function Board() {
             })}
           </div>
         ))}
+      </div>
+
+      {/* floating drag ghost — follows the finger, glides into the slot on drop */}
+      <div className="drag-ghost" ref={ghostRef} aria-hidden>
+        {dragType ? <Good type={dragType} /> : null}
       </div>
     </div>
   );

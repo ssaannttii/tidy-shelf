@@ -338,7 +338,7 @@ button {
   align-items: center;
   justify-content: center;
   min-height: 0;
-  padding: 6px 0;
+  padding: 12px 8px;
 }
 .cabinet {
   /* --cols (widest row's shelf count) is set inline per level from Board.tsx.
@@ -1363,11 +1363,11 @@ button {
 .cabinet {
   background: linear-gradient(180deg, var(--wood-hi), var(--wood));
   border: 4px solid var(--wood-edge);
-  border-radius: 16px;
-  padding: 9px;
-  gap: 9px;
+  border-radius: 18px;
+  padding: 12px;
+  gap: 12px;
   box-shadow: var(--sh-cabinet);
-  --shelf-gap: 8px; /* clear dark-frame gap BETWEEN compartments */
+  --shelf-gap: 10px; /* clear dark-frame gap BETWEEN compartments */
 }
 /* Each shelf is ONE wood-back compartment; the goods stand on its floor.
    This is what makes a "shelf" (the trio that clears together) read as a single
@@ -1479,6 +1479,70 @@ button {
   outline: 2px dashed var(--good);
   outline-offset: -3px;
   border-radius: 7px;
+  animation: dropGlow 0.8s ease-in-out infinite;
+}
+@keyframes dropGlow {
+  0%, 100% { background: rgba(155, 224, 91, 0.3) !important; }
+  50% { background: rgba(155, 224, 91, 0.55) !important; }
+}
+
+/* ---------- drag & drop juice ---------- */
+/* the good the finger is carrying: a floating clone above the cabinet */
+.drag-ghost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 70;
+  pointer-events: none;
+  opacity: 0;
+  will-change: transform;
+  filter: drop-shadow(0 10px 10px rgba(60, 35, 15, 0.32));
+}
+.drag-ghost .good-svg {
+  width: var(--gw, 40px);
+  height: var(--gh, 60px);
+  animation: none;
+}
+/* hide the good in the slot it was lifted from while carrying it */
+.cabinet.dragging .slot.drag-src .good {
+  opacity: 0;
+}
+/* a picked-up good shouldn't also idle-breathe */
+.cabinet.dragging .good-svg {
+  animation: none;
+}
+
+/* ---------- idle "breathing" — subtle life on the shelves ---------- */
+@keyframes breathe {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.4px); }
+}
+.good:not(.obstacle) .good-svg {
+  animation: breathe 3.4s ease-in-out infinite;
+  transform-origin: 50% 100%;
+}
+.slot.selected .good .good-svg { animation: none; }
+
+/* ---------- depth: show there's more behind, with a count ---------- */
+.good.depth .depth-cards {
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  bottom: 8%;
+  height: 62%;
+  border-radius: 5px 5px 3px 3px;
+  background: linear-gradient(180deg, rgba(120, 90, 55, 0.34), rgba(90, 64, 36, 0.28));
+  box-shadow: -5px 0 0 -1px rgba(120, 90, 55, 0.22), 5px 0 0 -1px rgba(120, 90, 55, 0.22);
+  z-index: -1;
+}
+.good .badge {
+  top: -3px;
+  right: -2px;
+  background: linear-gradient(180deg, #4a3320, #2f2013);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  min-width: 19px;
+  height: 19px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
 }
 
 /* ---------- Game Board: booster tray ---------- */
