@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { useGame } from "../lib/store";
 import { TOTAL_LEVELS } from "../lib/levels";
 import { SettingsModal, ShopModal } from "./Modals";
+import { InstallButton } from "./pwa";
 
 export default function Home() {
   const progress = useGame((s) => s.progress);
@@ -50,6 +51,7 @@ export default function Home() {
           <button className="btn primary big-play" onClick={() => startLevel(continueId)}>
             {fresh ? "▶  Jugar" : `▶  Nivel ${continueId}`}
           </button>
+          <InstallButton />
         </div>
       </div>
 

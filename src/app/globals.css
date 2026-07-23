@@ -1451,6 +1451,44 @@ button {
 }
 .big-play { font-size: 28px; animation: btnPulse 2.2s ease-in-out infinite; }
 
+/* ---------- install app (PWA) ---------- */
+.install-btn {
+  background: linear-gradient(180deg, #ffffff, #fff4e0);
+  color: var(--accent);
+  border: 3px solid #fff;
+  border-radius: 16px;
+  font-weight: 800;
+  font-size: 15px;
+  padding: 11px 16px;
+  box-shadow: 0 4px 0 rgba(160, 120, 78, 0.35), 0 8px 12px rgba(120, 80, 40, 0.18);
+}
+.install-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(160, 120, 78, 0.35); }
+.install-sheet { text-align: center; }
+.install-sheet-ico { font-size: 44px; line-height: 1; }
+.install-sheet h2 { margin: 6px 0 2px; }
+.install-steps {
+  text-align: left;
+  margin: 10px 0 16px;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--ink);
+}
+.install-steps li { padding-left: 4px; }
+.ios-share {
+  display: inline-grid;
+  place-items: center;
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: 1.5px solid var(--blue2);
+  color: var(--blue2);
+  font-weight: 800;
+  vertical-align: middle;
+}
+
 /* ---------- bottom nav (Home) ---------- */
 .bottom-nav {
   background: linear-gradient(180deg, var(--nav1), var(--nav2));

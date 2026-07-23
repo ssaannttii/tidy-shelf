@@ -1,13 +1,36 @@
 {
+  "id": "/",
   "name": "Estantería Ordenada — Puzle de ordenar relajante",
   "short_name": "Estantería",
   "description": "Mueve productos entre estantes, junta tres iguales y ordena el mueble.",
-  "start_url": "/",
+  "lang": "es",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
-  "background_color": "#efd9bd",
-  "theme_color": "#b98a5e",
+  "background_color": "#ece1ce",
+  "theme_color": "#f2a177",
+  "categories": ["games", "puzzle"],
   "icons": [
-    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Seguir jugando",
+      "short_name": "Jugar",
+      "url": "/?source=shortcut-play",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Mapa de niveles",
+      "short_name": "Niveles",
+      "url": "/?source=shortcut-map",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
   ]
 }

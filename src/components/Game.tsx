@@ -34,6 +34,17 @@ export default function Game() {
     return () => document.removeEventListener("contextmenu", prevent);
   }, []);
 
+  // register the service worker so the game installs + works offline like an app
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("serviceWorker" in navigator)) return;
+    const register = () => navigator.serviceWorker.register("/sw.js").catch(() => {});
+    if (document.readyState === "complete") register();
+    else {
+      window.addEventListener("load", register, { once: true });
+      return () => window.removeEventListener("load", register);
+    }
+  }, []);
+
   if (screen === "home") return <Home />;
   if (screen === "map") return <LevelMap />;
   return <GameScreen />;
