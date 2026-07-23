@@ -22,7 +22,7 @@ export default function Home() {
         <button className="pill coins" onClick={() => setShop(true)}>
           <span className="ico">🪙</span> {progress.coins}
         </button>
-        <button className="icon-btn" onClick={() => setSettings(true)} aria-label="Settings">
+        <button className="icon-btn" onClick={() => setSettings(true)} aria-label="Ajustes">
           ⚙
         </button>
       </div>
@@ -30,8 +30,8 @@ export default function Home() {
       <div className="home-center">
         <div className="logo">
           <div className="mark">🗄️</div>
-          <h1>Tidy Shelf</h1>
-          <p>A cozy sorting puzzle</p>
+          <h1>Estantería Ordenada</h1>
+          <p>Un puzle de ordenar relajante</p>
         </div>
 
         <div className="mini-row">
@@ -47,23 +47,23 @@ export default function Home() {
 
         <div className="home-actions">
           <button className="btn primary big-play" onClick={() => startLevel(continueId)}>
-            {fresh ? "▶  Play" : `▶  Level ${continueId}`}
+            {fresh ? "▶  Jugar" : `▶  Nivel ${continueId}`}
           </button>
         </div>
       </div>
 
       <div className="bottom-nav">
         <button className="nav-btn" onClick={() => setShop(true)}>
-          <span className="nico">🛒</span>Shop
+          <span className="nico">🛒</span>Tienda
         </button>
         <button className="nav-btn" onClick={goMap}>
-          <span className="nico">☰</span>Levels
+          <span className="nico">☰</span>Niveles
         </button>
         <button className="nav-btn active" onClick={() => startLevel(continueId)}>
-          <span className="nico">🏠</span>Play
+          <span className="nico">🏠</span>Jugar
         </button>
         <button className="nav-btn" onClick={() => setSettings(true)}>
-          <span className="nico">⚙️</span>Settings
+          <span className="nico">⚙️</span>Ajustes
         </button>
       </div>
 

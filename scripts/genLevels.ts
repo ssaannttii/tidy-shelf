@@ -322,7 +322,7 @@ function main() {
       const level: LevelData = {
         id: id + 1,
         world: spec.world,
-        name: `${["Pantry", "Kitchen", "Garden", "Toy Box", "Workshop"][spec.world - 1]} ${
+        name: `${["Despensa", "Cocina", "Jardín", "Juguetes", "Taller"][spec.world - 1]} ${
           ((id) % 8) + 1
         }`,
         difficulty: spec.difficulty,
@@ -363,7 +363,7 @@ function main() {
       const level: LevelData = {
         id: id + 1,
         world: spec.world,
-        name: `${["Pantry", "Kitchen", "Garden", "Toy Box", "Workshop"][spec.world - 1]} ${(id % 8) + 1}`,
+        name: `${["Despensa", "Cocina", "Jardín", "Juguetes", "Taller"][spec.world - 1]} ${(id % 8) + 1}`,
         difficulty: spec.difficulty,
         slotsPerShelf: SLOTS,
         shelves,

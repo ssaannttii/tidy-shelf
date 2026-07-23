@@ -37,8 +37,8 @@ export function Modal({ children }: { children: React.ReactNode }) {
 }
 
 export const DIFF_LABEL: Record<string, string> = {
-  easy: "Easy",
-  medium: "Medium",
-  hard: "Hard",
-  expert: "Expert",
+  easy: "Fácil",
+  medium: "Medio",
+  hard: "Difícil",
+  expert: "Experto",
 };

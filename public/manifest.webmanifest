@@ -1,7 +1,7 @@
 {
-  "name": "Tidy Shelf — Cozy Sorting Puzzle",
-  "short_name": "Tidy Shelf",
-  "description": "Move goods between shelves, match three of a kind, and tidy the cabinet.",
+  "name": "Estantería Ordenada — Puzle de ordenar relajante",
+  "short_name": "Estantería",
+  "description": "Mueve productos entre estantes, junta tres iguales y ordena el mueble.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

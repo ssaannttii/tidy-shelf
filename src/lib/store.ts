@@ -74,12 +74,12 @@ function basePowerups(bought?: Partial<Record<PowerId, number>>): Record<PowerId
 }
 
 function praiseFor(combo: number): string | null {
-  if (combo >= 22) return "Incredible!";
-  if (combo >= 17) return "Unbelievable!";
-  if (combo >= 13) return "Bravo!";
-  if (combo >= 9) return "Amazing!";
-  if (combo >= 6) return "Great!";
-  if (combo >= 3) return "Nice!";
+  if (combo >= 22) return "¡Increíble!";
+  if (combo >= 17) return "¡Alucinante!";
+  if (combo >= 13) return "¡Bravo!";
+  if (combo >= 9) return "¡Asombroso!";
+  if (combo >= 6) return "¡Genial!";
+  if (combo >= 3) return "¡Bien!";
   return null;
 }
 
@@ -240,7 +240,7 @@ export const useGame = create<GameStore>((set, get) => {
     }
     if (isStuck(board)) {
       if (get().powerups.shuffle > 0 || get().powerups.hammer > 0) {
-        pushFloat("Stuck! Try a booster", "info");
+        pushFloat("¡Atascado! Prueba un potenciador", "info");
       } else {
         set({ status: "lost", lostReason: "stuck" });
         play("lose");
@@ -500,15 +500,15 @@ export const useGame = create<GameStore>((set, get) => {
       }
       if (p === "freeze") {
         set({ freezeMs: FREEZE_MS, powerups: { ...s.powerups, freeze: s.powerups.freeze - 1 } });
-        pushFloat("Time frozen ❄", "info");
+        pushFloat("Tiempo congelado ❄", "info");
         play("power");
       } else if (p === "double") {
         set({ doubleMs: DOUBLE_MS, powerups: { ...s.powerups, double: s.powerups.double - 1 } });
-        pushFloat("Double points ×2", "info");
+        pushFloat("Puntos dobles ×2", "info");
         play("power");
       } else if (p === "hammer") {
         set({ hammerArmed: !s.hammerArmed, selected: null });
-        if (!s.hammerArmed) pushFloat("Smash any item 🔨", "info");
+        if (!s.hammerArmed) pushFloat("Rompe cualquier objeto 🔨", "info");
         play("power");
       } else if (p === "hint") {
         const mv = findHint(s.board);
@@ -543,7 +543,7 @@ export const useGame = create<GameStore>((set, get) => {
             ].slice(-80),
             fxId: s.fxId + 1,
           });
-          pushFloat("Shuffled 🔀", "info");
+          pushFloat("¡Mezclado! 🔀", "info");
           play("power");
         } else {
           play("error");

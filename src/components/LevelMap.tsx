@@ -18,7 +18,7 @@ export default function LevelMap() {
       <div className="stage">
         <div className="topbar">
           <div className="group">
-            <button className="icon-btn" onClick={goHome} aria-label="Home">
+            <button className="icon-btn" onClick={goHome} aria-label="Inicio">
               ⌂
             </button>
           </div>
@@ -27,7 +27,7 @@ export default function LevelMap() {
               <span className="ico">⭐</span>
               {totalStars}/{TOTAL_LEVELS * 3}
             </span>
-            <button className="icon-btn" onClick={() => setSettings(true)} aria-label="Settings">
+            <button className="icon-btn" onClick={() => setSettings(true)} aria-label="Ajustes">
               ⚙
             </button>
           </div>

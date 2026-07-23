@@ -53,8 +53,8 @@ export function WinModal() {
   return (
     <Modal>
       <div style={{ fontSize: 40 }}>{stars >= 3 ? "🎉" : "✨"}</div>
-      <p style={{ fontWeight: 800, fontSize: 15, margin: 0 }}>Level {level.id}</p>
-      <h2>Completed!</h2>
+      <p style={{ fontWeight: 800, fontSize: 15, margin: 0 }}>Nivel {level.id}</p>
+      <h2>¡Completado!</h2>
       <div className="big-stars">
         {[0, 1, 2].map((i) => (
           <span key={i} className={`s ${i < stars ? "on" : ""} ${i === 1 ? "mid" : ""}`}>
@@ -68,7 +68,7 @@ export function WinModal() {
       <div className="stat-row">
         <div className="stat">
           <span className="v">{moves}</span>
-          <span className="k">Moves</span>
+          <span className="k">Jugadas</span>
         </div>
         <div className="stat">
           <span className="v">{level.par}</span>
@@ -76,14 +76,14 @@ export function WinModal() {
         </div>
       </div>
       <div className="modal-actions">
-        <button className="btn ghost" onClick={goMap} aria-label="Levels">
+        <button className="btn ghost" onClick={goMap} aria-label="Niveles">
           ☰
         </button>
-        <button className="btn ghost" onClick={replay} aria-label="Replay">
+        <button className="btn ghost" onClick={replay} aria-label="Reintentar">
           ↻
         </button>
         <button className="btn primary" onClick={nextLevel} style={{ flex: 1 }}>
-          {isLast ? "Finish 🏆" : "Next ▶"}
+          {isLast ? "Terminar 🏆" : "Siguiente ▶"}
         </button>
       </div>
     </Modal>
@@ -97,22 +97,22 @@ export function LoseModal({ onShop }: { onShop: () => void }) {
   return (
     <Modal>
       <div style={{ fontSize: 40 }}>{reason === "time" ? "⏰" : "🧩"}</div>
-      <h2>{reason === "time" ? "Time's up!" : "No moves left"}</h2>
+      <h2>{reason === "time" ? "¡Se acabó el tiempo!" : "Sin movimientos"}</h2>
       <p>
         {reason === "time"
-          ? "Almost tidy — give it another go."
-          : "That shelf got stuck. A booster can help you out."}
+          ? "Casi lo tienes — inténtalo otra vez."
+          : "La estantería se atascó. Un potenciador puede ayudarte."}
       </p>
       <div className="modal-actions" style={{ flexDirection: "column" }}>
         <button className="btn" onClick={onShop}>
-          🛒 Get boosters
+          🛒 Conseguir potenciadores
         </button>
         <div style={{ display: "flex", gap: 10 }}>
           <button className="btn ghost" onClick={goMap} style={{ flex: 1 }}>
-            ☰ Levels
+            ☰ Niveles
           </button>
           <button className="btn primary" onClick={replay} style={{ flex: 1 }}>
-            ↻ Retry
+            ↻ Reintentar
           </button>
         </div>
       </div>
@@ -121,11 +121,11 @@ export function LoseModal({ onShop }: { onShop: () => void }) {
 }
 
 const SHOP_ITEMS: { id: PowerId; icon: string; label: string; desc: string }[] = [
-  { id: "hammer", icon: "🔨", label: "Smash", desc: "Remove any single item" },
-  { id: "hint", icon: "💡", label: "Hint", desc: "Show a helpful move" },
-  { id: "shuffle", icon: "🔀", label: "Shuffle", desc: "Rearrange the shelves" },
-  { id: "freeze", icon: "❄️", label: "Freeze", desc: "Pause the timer 10s" },
-  { id: "double", icon: "✨", label: "Double", desc: "×2 points for 15s" },
+  { id: "hammer", icon: "🔨", label: "Romper", desc: "Quita cualquier objeto (o rompe una caja)" },
+  { id: "hint", icon: "💡", label: "Pista", desc: "Muestra un buen movimiento" },
+  { id: "shuffle", icon: "🔀", label: "Mezclar", desc: "Reordena las estanterías" },
+  { id: "freeze", icon: "❄️", label: "Congelar", desc: "Pausa el tiempo 10s" },
+  { id: "double", icon: "✨", label: "Doble", desc: "×2 puntos durante 15s" },
 ];
 
 export function ShopModal({ onClose }: { onClose: () => void }) {
@@ -135,9 +135,9 @@ export function ShopModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="overlay" onClick={onClose}>
       <div className="modal shop" onClick={(e) => e.stopPropagation()}>
-        <h2>Booster Shop</h2>
+        <h2>Tienda de potenciadores</h2>
         <p className="coin-balance">
-          <span className="coin-ico">🪙</span> {coins} coins
+          <span className="coin-ico">🪙</span> {coins} monedas
         </p>
         <div className="shop-list">
           {SHOP_ITEMS.map((it) => {
@@ -165,9 +165,9 @@ export function ShopModal({ onClose }: { onClose: () => void }) {
             );
           })}
         </div>
-        <p className="shop-note">Boosters you buy are added on top of the free ones each level.</p>
+        <p className="shop-note">Los potenciadores que compras se suman a los gratis de cada nivel.</p>
         <button className="btn primary" onClick={onClose} style={{ width: "100%" }}>
-          Done
+          Hecho
         </button>
       </div>
     </div>
@@ -190,33 +190,33 @@ export function SettingsModal({ onClose }: { onClose: () => void }) {
   return (
     <div className="overlay" onClick={onClose}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <h2>Settings</h2>
+        <h2>Ajustes</h2>
         <div className="settings-list">
           <div className="setting">
-            <span>🔊 Sound</span>
+            <span>🔊 Sonido</span>
             <Toggle on={progress.sound} onClick={() => setSound(!progress.sound)} />
           </div>
           <div className="setting">
-            <span>🧘 Relax mode (no timer)</span>
+            <span>🧘 Modo relax (sin tiempo)</span>
             <Toggle on={progress.relax} onClick={() => setRelax(!progress.relax)} />
           </div>
         </div>
         <p style={{ fontSize: 13, textAlign: "left", lineHeight: 1.5 }}>
-          <b>How to play:</b> Move a product onto an empty spot. Line up three of the same kind
-          on one shelf and they clear, revealing what&apos;s behind. Tidy the whole cabinet!
+          <b>Cómo jugar:</b> mueve un producto a un hueco vacío. Junta tres iguales
+          en un estante y se limpian, revelando lo que hay detrás. ¡Ordena todo el mueble!
         </p>
         <div className="modal-actions" style={{ flexDirection: "column" }}>
           {!confirmReset ? (
             <button className="btn ghost" onClick={() => setConfirmReset(true)}>
-              Reset progress
+              Reiniciar progreso
             </button>
           ) : (
             <button className="btn" style={{ background: "var(--bad)", color: "#fff" }} onClick={resetAll}>
-              Tap again to erase everything
+              Toca otra vez para borrarlo todo
             </button>
           )}
           <button className="btn primary" onClick={onClose}>
-            Done
+            Hecho
           </button>
         </div>
       </div>
@@ -229,11 +229,11 @@ export function Tutorial({ onClose }: { onClose: () => void }) {
     <div className="tut">
       <div className="bubble">
         <div className="hand">👆</div>
-        Tap a product, then tap an <b>empty spot</b> to move it. Line up <b>three of a kind</b> on
-        one shelf to clear them!
+        Toca un producto y luego un <b>hueco vacío</b> para moverlo. Junta <b>tres iguales</b> en
+        un estante para limpiarlos.
         <div>
           <button className="btn primary" onClick={onClose}>
-            Got it
+            ¡Entendido!
           </button>
         </div>
       </div>
@@ -246,7 +246,7 @@ const MECH_TUT: Record<string, { icon: string; text: React.ReactNode }> = {
     icon: "📦",
     text: (
       <>
-        Clear a shelf <b>right next to a crate</b> to smash it — or use the 🔨 hammer.
+        Limpia un estante <b>justo al lado de una caja</b> para romperla — o usa el martillo 🔨.
       </>
     ),
   },
@@ -254,7 +254,7 @@ const MECH_TUT: Record<string, { icon: string; text: React.ReactNode }> = {
     icon: "🔒",
     text: (
       <>
-        A <b>locked shelf</b> opens when you clear a shelf next to it.
+        Un <b>estante bloqueado</b> se abre al limpiar uno de al lado.
       </>
     ),
   },
@@ -262,7 +262,7 @@ const MECH_TUT: Record<string, { icon: string; text: React.ReactNode }> = {
     icon: "🎁",
     text: (
       <>
-        Clear next to a <b>gift box</b> to open it and reveal an item.
+        Limpia al lado de una <b>caja regalo</b> para abrirla y descubrir un objeto.
       </>
     ),
   },
@@ -270,7 +270,7 @@ const MECH_TUT: Record<string, { icon: string; text: React.ReactNode }> = {
     icon: "❄️",
     text: (
       <>
-        A <b>frozen</b> item thaws when you clear a shelf beside it.
+        Un objeto <b>congelado</b> se descongela al limpiar un estante al lado.
       </>
     ),
   },
@@ -278,7 +278,7 @@ const MECH_TUT: Record<string, { icon: string; text: React.ReactNode }> = {
     icon: "⛓️",
     text: (
       <>
-        A <b>chained</b> item can&apos;t move until you clear a shelf next to it.
+        Un objeto <b>encadenado</b> no se puede mover hasta que limpies un estante al lado.
       </>
     ),
   },
@@ -294,7 +294,7 @@ export function MechTutorial({ mech, onClose }: { mech: string; onClose: () => v
         {t.text}
         <div>
           <button className="btn primary" onClick={onClose}>
-            Got it
+            ¡Entendido!
           </button>
         </div>
       </div>

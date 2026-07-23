@@ -69,11 +69,11 @@ export const WORLD_POOLS: Record<number, ItemType[]> = {
 };
 
 export const WORLDS: WorldMeta[] = [
-  { id: 1, name: "Pantry", emoji: "🍎", accent: "#e8794b", wood: "#b07a4e", bg: ["#f7ecd9", "#efd9bd"] },
-  { id: 2, name: "Kitchen", emoji: "☕", accent: "#4b8fe8", wood: "#9c7a5c", bg: ["#e6eff7", "#cfe0f2"] },
-  { id: 3, name: "Garden", emoji: "🌷", accent: "#5aa96b", wood: "#8a7a55", bg: ["#e9f4e4", "#d3ead0"] },
-  { id: 4, name: "Toy Box", emoji: "🧸", accent: "#c065c0", wood: "#a9744f", bg: ["#f4e8f7", "#e6d3f2"] },
-  { id: 5, name: "Workshop", emoji: "🔧", accent: "#5b6b7a", wood: "#7d7266", bg: ["#e9ecef", "#d5dbe1"] },
+  { id: 1, name: "Despensa", emoji: "🍎", accent: "#e8794b", wood: "#b07a4e", bg: ["#f7ecd9", "#efd9bd"] },
+  { id: 2, name: "Cocina", emoji: "☕", accent: "#4b8fe8", wood: "#9c7a5c", bg: ["#e6eff7", "#cfe0f2"] },
+  { id: 3, name: "Jardín", emoji: "🌷", accent: "#5aa96b", wood: "#8a7a55", bg: ["#e9f4e4", "#d3ead0"] },
+  { id: 4, name: "Juguetes", emoji: "🧸", accent: "#c065c0", wood: "#a9744f", bg: ["#f4e8f7", "#e6d3f2"] },
+  { id: 5, name: "Taller", emoji: "🔧", accent: "#5b6b7a", wood: "#7d7266", bg: ["#e9ecef", "#d5dbe1"] },
 ];
 
 export function worldMeta(id: number): WorldMeta {

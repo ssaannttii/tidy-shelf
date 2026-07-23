@@ -8,10 +8,10 @@ import Board from "./Board";
 import { WinModal, LoseModal, SettingsModal, Tutorial, MechTutorial, ShopModal, Confetti } from "./Modals";
 
 const POWERS: { id: PowerId; icon: string; label: string }[] = [
-  { id: "hammer", icon: "🔨", label: "Smash" },
-  { id: "hint", icon: "💡", label: "Hint" },
-  { id: "shuffle", icon: "🔀", label: "Shuffle" },
-  { id: "freeze", icon: "❄️", label: "Freeze" },
+  { id: "hammer", icon: "🔨", label: "Romper" },
+  { id: "hint", icon: "💡", label: "Pista" },
+  { id: "shuffle", icon: "🔀", label: "Mezclar" },
+  { id: "freeze", icon: "❄️", label: "Congelar" },
   { id: "double", icon: "✨", label: "×2" },
 ];
 
@@ -68,13 +68,13 @@ export default function GameScreen() {
           <span className="pill progress">
             {sorted}/{totalItems}
           </span>
-          <span className="level-pill">Lv. {level.id}</span>
+          <span className="level-pill">Nvl. {level.id}</span>
           <div className="group">
             <button className="pill coins" onClick={() => setShop(true)}>
               <span className="ico">⭐</span>
               {coins}
             </button>
-            <button className="icon-btn" onClick={() => setSettings(true)} aria-label="Settings">
+            <button className="icon-btn" onClick={() => setSettings(true)} aria-label="Ajustes">
               ⏸
             </button>
           </div>
@@ -82,9 +82,9 @@ export default function GameScreen() {
 
         <div className="combo-slot">
           {combo >= 2 ? (
-            <span className="combo-pill">{combo} combo!</span>
+            <span className="combo-pill">¡{combo} combo!</span>
           ) : doubleMs > 0 ? (
-            <span className="combo-pill dbl">Double ×2!</span>
+            <span className="combo-pill dbl">¡Doble ×2!</span>
           ) : null}
         </div>
 
@@ -102,13 +102,13 @@ export default function GameScreen() {
 
         {hammerArmed && (
           <div className="hammer-banner">
-            🔨 Tap an item to smash it
-            <button onClick={() => usePower("hammer")}>Cancel</button>
+            🔨 Toca un objeto para romperlo
+            <button onClick={() => usePower("hammer")}>Cancelar</button>
           </div>
         )}
 
         <div className="util-row">
-          <button className="icon-btn" onClick={goMap} aria-label="Levels">
+          <button className="icon-btn" onClick={goMap} aria-label="Niveles">
             ☰
           </button>
           <button
@@ -116,11 +116,11 @@ export default function GameScreen() {
             onClick={undo}
             disabled={historyLen === 0}
             style={{ opacity: historyLen === 0 ? 0.45 : 1 }}
-            aria-label="Undo"
+            aria-label="Deshacer"
           >
             ↶
           </button>
-          <button className="icon-btn" onClick={replay} aria-label="Restart">
+          <button className="icon-btn" onClick={replay} aria-label="Reiniciar">
             ↻
           </button>
         </div>

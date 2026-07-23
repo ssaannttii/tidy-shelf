@@ -2,23 +2,23 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Tidy Shelf — Cozy Sorting Puzzle",
+  title: "Estantería Ordenada — Puzle de ordenar relajante",
   description:
-    "A cozy shelf-sorting puzzle. Move goods between shelves, line up three of a kind, and tidy the whole cabinet before the timer runs out.",
-  applicationName: "Tidy Shelf",
+    "Un puzle de ordenar estanterías relajante. Mueve productos entre estantes, junta tres iguales y ordena todo el mueble antes de que se acabe el tiempo.",
+  applicationName: "Estantería Ordenada",
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Tidy Shelf",
+    title: "Estantería Ordenada",
   },
   icons: {
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     apple: [{ url: "/icon.svg" }],
   },
   openGraph: {
-    title: "Tidy Shelf — Cozy Sorting Puzzle",
-    description: "Move goods between shelves, match three, tidy the cabinet.",
+    title: "Estantería Ordenada — Puzle de ordenar relajante",
+    description: "Mueve productos entre estantes, junta tres iguales y ordena el mueble.",
     type: "website",
   },
 };
@@ -34,7 +34,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body>
         <div id="app-root">{children}</div>
       </body>
