@@ -244,6 +244,12 @@ export default function Board() {
     const shelf = Number(target.dataset.shelf);
     const slot = Number(target.dataset.slot);
     if (Number.isNaN(shelf) || Number.isNaN(slot)) return;
+    // keep every pointermove/up coming to us even if the finger leaves the slot
+    try {
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    } catch {
+      /* ignore */
+    }
     const stack = board.shelves[shelf]?.[slot];
     const front = stack?.[stack.length - 1];
     const movable = !!front && front.k === "item" && !front.chained && !front.frozen;

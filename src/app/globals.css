@@ -1487,6 +1487,18 @@ button {
 }
 
 /* ---------- drag & drop juice ---------- */
+/* CRITICAL for mobile: the browser must NOT treat a drag on the board as a
+   scroll/pan gesture (that fires pointercancel and kills the drag). Claim the
+   gesture for the game on the cabinet and everything inside it. */
+.cabinet,
+.cabinet * {
+  touch-action: none;
+}
+.cabinet {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
 /* the good the finger is carrying: a floating clone above the cabinet */
 .drag-ghost {
   position: fixed;
