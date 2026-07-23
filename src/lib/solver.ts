@@ -1,7 +1,9 @@
 import {
   applyMove,
+  cellKey,
   cloneBoard,
-  front,
+  frontType,
+  isMovableFront,
   isSolved,
   itemsRemaining,
   type Board,
@@ -16,12 +18,30 @@ import {
  * This dramatically shrinks the search space for the solver.
  */
 export function canonicalKey(b: Board): string {
-  const shelfKeys = b.shelves.map((sh) => {
-    const slotKeys = sh.map((sl) => sl.join(">"));
+  // "plain" = no locks and every cell a plain item: then shelf ORDER is
+  // irrelevant (no adjacency-driven effects) and we can sort shelves for a much
+  // smaller search space — identical to the v1 key. Otherwise adjacency matters,
+  // so we keep shelves positional. Slot order within a shelf is always
+  // irrelevant to clears/effects, so we sort slots either way.
+  let plain = true;
+  for (let s = 0; s < b.shelves.length && plain; s++) {
+    if (b.locked[s]) plain = false;
+    for (const sl of b.shelves[s]) {
+      for (const c of sl) {
+        if (c.k !== "item" || c.frozen || c.chained) {
+          plain = false;
+          break;
+        }
+      }
+      if (!plain) break;
+    }
+  }
+  const shelfKeys = b.shelves.map((sh, s) => {
+    const slotKeys = sh.map((sl) => sl.map(cellKey).join(">"));
     slotKeys.sort();
-    return slotKeys.join("|");
+    return (b.locked[s] ? "L" : "") + slotKeys.join("|");
   });
-  shelfKeys.sort();
+  if (plain) shelfKeys.sort();
   return b.slotsPerShelf + ";" + shelfKeys.join("/");
 }
 
@@ -29,6 +49,7 @@ export function canonicalKey(b: Board): string {
 function genMoves(b: Board): Move[] {
   const firstEmpty: number[] = new Array(b.shelves.length).fill(-1);
   for (let s = 0; s < b.shelves.length; s++) {
+    if (b.locked[s]) continue; // can't drop into a locked shelf
     for (let j = 0; j < b.shelves[s].length; j++) {
       if (b.shelves[s][j].length === 0) {
         firstEmpty[s] = j;
@@ -40,6 +61,7 @@ function genMoves(b: Board): Move[] {
   for (let s = 0; s < b.shelves.length; s++) {
     for (let j = 0; j < b.shelves[s].length; j++) {
       if (b.shelves[s][j].length === 0) continue;
+      if (!isMovableFront(b, s, j)) continue; // frozen/chained/crate/gift/locked
       for (let t = 0; t < b.shelves.length; t++) {
         const e = firstEmpty[t];
         if (e === -1) continue;
@@ -58,7 +80,7 @@ function boardScore(b: Board): number {
     const counts = new Map<string, number>();
     let filled = 0;
     for (const slot of shelf) {
-      const f = front(slot);
+      const f = frontType(slot);
       if (f !== null) {
         filled += 1;
         counts.set(f, (counts.get(f) ?? 0) + 1);
@@ -180,15 +202,18 @@ export function findHint(b: Board, maxNodes = 40000): Move | null {
   // Fallback: any move that produces a clear, else any legal move.
   let anyMove: Move | null = null;
   const firstEmpty: number[] = new Array(b.shelves.length).fill(-1);
-  for (let s = 0; s < b.shelves.length; s++)
+  for (let s = 0; s < b.shelves.length; s++) {
+    if (b.locked[s]) continue;
     for (let j = 0; j < b.shelves[s].length; j++)
       if (b.shelves[s][j].length === 0) {
         firstEmpty[s] = j;
         break;
       }
+  }
   for (let s = 0; s < b.shelves.length; s++) {
     for (let j = 0; j < b.shelves[s].length; j++) {
       if (b.shelves[s][j].length === 0) continue;
+      if (!isMovableFront(b, s, j)) continue;
       for (let t = 0; t < b.shelves.length; t++) {
         const e = firstEmpty[t];
         if (e === -1 || (t === s && e === j)) continue;

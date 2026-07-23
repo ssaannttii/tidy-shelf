@@ -190,7 +190,7 @@ export default function Board() {
               const shelf = board.shelves[cell];
               return (
                 <div
-                  className={`shelf ${pulsing[cell] ? "pulsing" : ""}`}
+                  className={`shelf ${pulsing[cell] ? "pulsing" : ""} ${board.locked[cell] ? "locked" : ""}`}
                   key={ci}
                   style={{ "--slots": slotsPer } as React.CSSProperties}
                 >
@@ -212,15 +212,27 @@ export default function Board() {
                       .join(" ");
                     return (
                       <div className={cls} key={si} data-shelf={cell} data-slot={si}>
-                        {top && (
-                          <div
-                            className={`item ${stack.length > 1 ? "depth" : ""}`}
-                            style={{ background: itemTint(top) }}
-                          >
-                            <span className="glyph">{top}</span>
-                            {stack.length > 1 && <span className="badge">{stack.length}</span>}
-                          </div>
-                        )}
+                        {top &&
+                          (top.k === "item" ? (
+                            <div
+                              className={`item ${stack.length > 1 ? "depth" : ""} ${top.frozen ? "frozen" : ""} ${
+                                top.chained ? "chained" : ""
+                              }`}
+                              style={{ background: itemTint(top.t) }}
+                            >
+                              <span className="glyph">{top.t}</span>
+                              {stack.length > 1 && <span className="badge">{stack.length}</span>}
+                              {top.chained ? <span className="chain">⛓️</span> : null}
+                            </div>
+                          ) : top.k === "crate" ? (
+                            <div className="item obstacle crate">
+                              <span className="glyph">📦</span>
+                            </div>
+                          ) : (
+                            <div className="item obstacle gift">
+                              <span className="glyph">🎁</span>
+                            </div>
+                          ))}
                       </div>
                     );
                   })}

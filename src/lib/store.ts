@@ -3,12 +3,15 @@ import {
   applyMove,
   boardFromLevel,
   cloneBoard,
-  front,
+  frontType,
+  isLegalMove,
+  isMovableFront,
   isSolved,
   isStuck,
   itemsRemaining,
   resolveClears,
   type Board,
+  type Cell,
   type Move,
 } from "./engine";
 import { findHint, solveGreedy } from "./solver";
@@ -81,10 +84,12 @@ function praiseFor(combo: number): string | null {
 }
 
 function hasAllSameFrontShelf(b: Board): boolean {
-  for (const shelf of b.shelves) {
-    const f0 = front(shelf[0]);
+  for (let s = 0; s < b.shelves.length; s++) {
+    if (b.locked[s]) continue;
+    const shelf = b.shelves[s];
+    const f0 = frontType(shelf[0]);
     if (f0 === null) continue;
-    if (shelf.every((sl) => front(sl) === f0)) return true;
+    if (shelf.every((sl) => frontType(sl) === f0)) return true;
   }
   return false;
 }
@@ -143,7 +148,7 @@ interface GameStore {
   dismissFloat: (id: number) => void;
 }
 
-const emptyBoard: Board = { shelves: [], slotsPerShelf: 3 };
+const emptyBoard: Board = { shelves: [], slotsPerShelf: 3, locked: [], neighbors: [] };
 
 export const useGame = create<GameStore>((set, get) => {
   function pushFloat(text: string, kind: FloatMsg["kind"]) {
@@ -246,10 +251,8 @@ export const useGame = create<GameStore>((set, get) => {
     const s = get();
     if (s.status !== "playing" || !s.level) return;
     const b = s.board;
-    const src = b.shelves[from.shelf]?.[from.slot];
-    const dst = b.shelves[to.shelf]?.[to.slot];
-    const same = from.shelf === to.shelf && from.slot === to.slot;
-    if (!src || !dst || same || src.length === 0 || dst.length !== 0) {
+    const move: Move = { fromShelf: from.shelf, fromSlot: from.slot, toShelf: to.shelf, toSlot: to.slot };
+    if (!isLegalMove(b, move)) {
       play("error");
       set((st) => ({ shake: st.shake + 1, selected: null }));
       return;
@@ -263,7 +266,6 @@ export const useGame = create<GameStore>((set, get) => {
       coins: s.progress.coins,
       powerups: { ...s.powerups },
     };
-    const move: Move = { fromShelf: from.shelf, fromSlot: from.slot, toShelf: to.shelf, toSlot: to.slot };
     const { board, clears } = applyMove(b, move);
     set({ moves: s.moves + 1, history: [...s.history, snapshot].slice(-80) });
     applyOutcome(board, clears, false);
@@ -423,10 +425,20 @@ export const useGame = create<GameStore>((set, get) => {
           performMove(sel, { shelf, slot });
           return;
         }
+        if (!isMovableFront(s.board, shelf, slot)) {
+          play("error");
+          set((st) => ({ shake: st.shake + 1, selected: null }));
+          return;
+        }
         set({ selected: { shelf, slot } });
         play("select");
       } else {
         if (cell.length === 0) return;
+        if (!isMovableFront(s.board, shelf, slot)) {
+          play("error");
+          set((st) => ({ shake: st.shake + 1 }));
+          return;
+        }
         set({ selected: { shelf, slot } });
         play("select");
       }
@@ -587,26 +599,25 @@ export const useGame = create<GameStore>((set, get) => {
 });
 
 /** Reshuffle all items into the current slot shape; keep it solvable & clear-free. */
-function reshuffleBoard(b: Board): Board | null {
-  const items: string[] = [];
-  const depths: number[][] = b.shelves.map((sh) => sh.map((sl) => sl.length));
-  for (const sh of b.shelves) for (const sl of sh) for (const it of sl) items.push(it);
+type ItemCell = Extract<Cell, { k: "item" }>;
 
+function reshuffleBoard(b: Board): Board | null {
+  // Permute item TYPES among item cells only; keep depths, obstacles (crate/
+  // gift) and modifier positions fixed. Retry until a solvable, non-pre-cleared
+  // arrangement is found.
   for (let attempt = 0; attempt < 20; attempt++) {
-    const pool = items.slice();
-    for (let i = pool.length - 1; i > 0; i--) {
+    const nb = cloneBoard(b);
+    const itemCells: ItemCell[] = [];
+    for (const sh of nb.shelves) for (const sl of sh) for (const c of sl) if (c.k === "item") itemCells.push(c);
+    if (itemCells.length === 0) return null;
+    const types = itemCells.map((c) => c.t);
+    for (let i = types.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
-      [pool[i], pool[j]] = [pool[j], pool[i]];
+      [types[i], types[j]] = [types[j], types[i]];
     }
-    let p = 0;
-    const shelves: string[][][] = depths.map((sh) =>
-      sh.map((d) => {
-        const slot: string[] = [];
-        for (let k = 0; k < d; k++) slot.push(pool[p++]);
-        return slot;
-      }),
-    );
-    const nb: Board = { shelves, slotsPerShelf: b.slotsPerShelf };
+    itemCells.forEach((c, i) => {
+      c.t = types[i];
+    });
     if (hasAllSameFrontShelf(nb)) continue;
     const test = cloneBoard(nb);
     if (resolveClears(test).length > 0) continue;

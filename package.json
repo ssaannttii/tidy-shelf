@@ -7,7 +7,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "gen:levels": "tsx scripts/genLevels.ts"
+    "gen:levels": "tsx scripts/genLevels.ts",
+    "test": "tsx scripts/engine.test.ts && tsx scripts/test.ts",
+    "test:engine": "tsx scripts/engine.test.ts",
+    "test:levels": "tsx scripts/test.ts"
   },
   "dependencies": {
     "next": "^14.2.35",
