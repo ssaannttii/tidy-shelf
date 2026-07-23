@@ -218,6 +218,7 @@ export const useGame = create<GameStore>((set, get) => {
       vibrate(12);
     } else {
       play("place");
+      vibrate(8);
     }
 
     const won = isSolved(board);

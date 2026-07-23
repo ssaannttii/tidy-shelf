@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useGame } from "../lib/store";
+import { vibrate } from "../lib/audio";
 import { Good } from "./Good";
 import type { ItemType } from "../lib/types";
 
@@ -54,6 +55,8 @@ interface DownInfo {
   type: ItemType | null;
 }
 
+type SlotXY = { shelf: number; slot: number };
+
 function slotElFromPoint(x: number, y: number): { shelf: number; slot: number; el: HTMLElement } | null {
   const el = document.elementFromPoint(x, y);
   const slotEl = el?.closest?.(".slot") as HTMLElement | null;
@@ -80,9 +83,10 @@ export default function Board() {
   const hammerArmed = useGame((s) => s.hammerArmed);
 
   const [pulsing, setPulsing] = useState<Record<number, boolean>>({});
-  const [dropTarget, setDropTarget] = useState<{ shelf: number; slot: number } | null>(null);
-  const [dragSrc, setDragSrc] = useState<{ shelf: number; slot: number } | null>(null);
+  const [dropTarget, setDropTarget] = useState<SlotXY | null>(null);
+  const [dragSrc, setDragSrc] = useState<SlotXY | null>(null);
   const [dragType, setDragType] = useState<ItemType | null>(null);
+  const [landed, setLanded] = useState<{ shelf: number; slot: number; n: number } | null>(null);
   const [shaking, setShaking] = useState(false);
 
   const down = useRef<DownInfo | null>(null);
@@ -91,6 +95,14 @@ export default function Board() {
   const ghostRef = useRef<HTMLDivElement | null>(null);
   const ghostSize = useRef({ w: 40, h: 60 });
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const landTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const landN = useRef(0);
+
+  // latest selection/hammer, read inside the pointer handlers without re-subscribing
+  const selectedRef = useRef(selected);
+  selectedRef.current = selected;
+  const hammerRef = useRef(hammerArmed);
+  hammerRef.current = hammerArmed;
 
   // shelf clear pulse
   useEffect(() => {
@@ -129,9 +141,17 @@ export default function Board() {
   useEffect(
     () => () => {
       if (settleTimer.current) clearTimeout(settleTimer.current);
+      if (landTimer.current) clearTimeout(landTimer.current);
     },
     [],
   );
+
+  function markLanded(to: SlotXY) {
+    landN.current += 1;
+    setLanded({ shelf: to.shelf, slot: to.slot, n: landN.current });
+    if (landTimer.current) clearTimeout(landTimer.current);
+    landTimer.current = setTimeout(() => setLanded(null), 300);
+  }
 
   // position the floating ghost above the finger
   function placeGhost(x: number, y: number, lifted: boolean) {
@@ -163,13 +183,13 @@ export default function Board() {
       dragging.current = true;
       setDragType(d.type);
       setDragSrc({ shelf: d.shelf, slot: d.slot });
-      // show + place the ghost (opacity reset after last drag's fade-out)
       const g = ghostRef.current;
       if (g) {
         g.style.setProperty("--gw", `${ghostSize.current.w}px`);
         g.style.setProperty("--gh", `${ghostSize.current.h}px`);
         g.style.opacity = "1";
       }
+      vibrate(6);
       placeGhost(x, y, true);
     }
 
@@ -187,29 +207,56 @@ export default function Board() {
       else setDropTarget(null);
     }
 
-    function settleAndCommit(rect: DOMRect, from: { shelf: number; slot: number }, to: { shelf: number; slot: number }) {
+    function glideTo(rect: DOMRect, dur: string) {
       const g = ghostRef.current;
+      if (!g) return;
       const { w, h } = ghostSize.current;
-      if (g) {
-        g.style.transition = "transform .17s cubic-bezier(.2,.75,.3,1.08)";
-        g.style.transform = `translate(${rect.left + rect.width / 2 - w / 2}px, ${rect.bottom - h - 4}px) scale(1)`;
-      }
+      g.style.transition = `transform ${dur} cubic-bezier(.2,.75,.3,1.08)`;
+      g.style.transform = `translate(${rect.left + rect.width / 2 - w / 2}px, ${rect.bottom - h - 4}px) scale(1)`;
+    }
+
+    function settleAndCommit(rect: DOMRect, from: SlotXY, to: SlotXY) {
+      glideTo(rect, ".17s");
       settleTimer.current = setTimeout(() => {
         dragMove(from, to);
         endDrag();
+        markLanded(to);
       }, 165);
     }
 
-    function settleBack(from: { shelf: number; slot: number }) {
-      const el = slotEl(from.shelf, from.slot);
-      const rect = el?.getBoundingClientRect();
-      const g = ghostRef.current;
-      if (g && rect) {
-        const { w, h } = ghostSize.current;
-        g.style.transition = "transform .16s ease-out";
-        g.style.transform = `translate(${rect.left + rect.width / 2 - w / 2}px, ${rect.bottom - h - 4}px) scale(1)`;
-      }
+    function settleBack(from: SlotXY) {
+      const rect = slotEl(from.shelf, from.slot)?.getBoundingClientRect();
+      if (rect) glideTo(rect, ".16s");
       settleTimer.current = setTimeout(endDrag, 155);
+    }
+
+    // tap-to-move: glide the selected good over to the tapped empty slot
+    function flyTapMove(from: SlotXY, to: SlotXY, type: ItemType) {
+      const sr = (slotEl(from.shelf, from.slot)?.querySelector(".good") as HTMLElement | null)?.getBoundingClientRect();
+      const tr = slotEl(to.shelf, to.slot)?.getBoundingClientRect();
+      if (!sr || !tr) {
+        dragMove(from, to);
+        markLanded(to);
+        return;
+      }
+      ghostSize.current = { w: sr.width, h: sr.height };
+      setDragType(type);
+      setDragSrc(from);
+      const g = ghostRef.current;
+      if (g) {
+        g.style.setProperty("--gw", `${sr.width}px`);
+        g.style.setProperty("--gh", `${sr.height}px`);
+        g.style.transition = "none";
+        g.style.opacity = "1";
+        g.style.transform = `translate(${sr.left}px, ${sr.top}px) scale(1)`;
+      }
+      vibrate(6);
+      requestAnimationFrame(() => glideTo(tr, ".19s"));
+      settleTimer.current = setTimeout(() => {
+        dragMove(from, to);
+        endDrag();
+        markLanded(to);
+      }, 195);
     }
 
     function onUp(e: PointerEvent) {
@@ -223,9 +270,20 @@ export default function Board() {
         } else {
           settleBack({ shelf: d.shelf, slot: d.slot });
         }
-      } else {
-        tapSlot(d.shelf, d.slot);
+        return;
       }
+      // a tap: if a good is already selected and this is an empty target, glide it there
+      const sel = selectedRef.current;
+      const emptyTap = (board.shelves[d.shelf]?.[d.slot]?.length ?? 0) === 0;
+      if (!hammerRef.current && sel && !(sel.shelf === d.shelf && sel.slot === d.slot) && emptyTap) {
+        const st = board.shelves[sel.shelf]?.[sel.slot];
+        const front = st?.[st.length - 1];
+        if (front && front.k === "item") {
+          flyTapMove({ shelf: sel.shelf, slot: sel.slot }, { shelf: d.shelf, slot: d.slot }, front.t);
+          return;
+        }
+      }
+      tapSlot(d.shelf, d.slot);
     }
 
     window.addEventListener("pointermove", onMove, { passive: true });
@@ -299,6 +357,7 @@ export default function Board() {
                     const isDrop = dropTarget?.shelf === cell && dropTarget?.slot === si;
                     const isHintFrom = hint && hint.fromShelf === cell && hint.fromSlot === si;
                     const isHintTo = hint && hint.toShelf === cell && hint.toSlot === si;
+                    const isLanded = landed?.shelf === cell && landed?.slot === si;
                     const behind = stack.length - 1;
                     const cls = [
                       "slot",
@@ -317,7 +376,7 @@ export default function Board() {
                             <div
                               className={`good ${behind > 0 ? "depth" : ""} ${top.frozen ? "frozen" : ""} ${
                                 top.chained ? "chained" : ""
-                              }`}
+                              } ${isLanded ? "landed" : ""}`}
                             >
                               {behind > 0 && <span className="depth-cards" aria-hidden />}
                               <Good type={top.t} />

@@ -1794,3 +1794,39 @@ button {
   text-shadow: 0 2px 0 rgba(180, 100, 40, 0.2);
 }
 .tut .hand { animation: floaty 1.6s ease-in-out infinite; }
+
+/* =====================================================================
+   FEEL PASS — motion & micro-interactions across the whole game
+   ===================================================================== */
+
+/* landing squash when a good drops into a slot (tap or drag) */
+@keyframes land {
+  0%   { transform: translateY(-7px) scaleY(1.06) scaleX(0.98); }
+  45%  { transform: translateY(0) scaleY(0.9) scaleX(1.07); }
+  72%  { transform: scaleY(1.03) scaleX(0.99); }
+  100% { transform: none; }
+}
+.good.landed .good-svg { animation: land 0.3s ease; }
+
+/* screen entrance — home/map rise & fade; game fades only (no transform, so
+   the position:fixed drag ghost is never re-anchored) */
+@keyframes screenIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+.screen { animation: screenIn 0.28s ease both; }
+.screen.game { animation: fadeIn 0.22s ease both; }
+
+/* overlays, modals, win, tutorial — smooth entrances */
+.overlay { animation: fadeIn 0.18s ease both; }
+.modal { animation: popIn 0.26s cubic-bezier(.2, .8, .3, 1.1) both; }
+.win-screen { animation: fadeIn 0.28s ease both; }
+.tut { animation: fadeIn 0.2s ease both; }
+.tut .bubble { animation: popIn 0.34s cubic-bezier(.2, .8, .3, 1.05) both; }
+
+/* consistent tactile press feedback */
+.nav-btn, .level-node, .util-row .icon-btn { transition: transform 0.08s ease, filter 0.12s ease; }
+.nav-btn:active { transform: scale(0.94); }
+.level-node:not(.locked):active { transform: scale(0.95); }
+.btn:active, .icon-btn:active, .power:active, .pill:active { filter: brightness(0.96); }
+
+/* selected good reads clearly (soft lift shadow) */
+.slot.selected .good-svg { filter: drop-shadow(0 6px 7px rgba(0, 0, 0, 0.24)); }
