@@ -57,16 +57,6 @@ interface DownInfo {
 
 type SlotXY = { shelf: number; slot: number };
 
-function slotElFromPoint(x: number, y: number): { shelf: number; slot: number; el: HTMLElement } | null {
-  const el = document.elementFromPoint(x, y);
-  const slotEl = el?.closest?.(".slot") as HTMLElement | null;
-  if (!slotEl) return null;
-  const shelf = Number(slotEl.dataset.shelf);
-  const slot = Number(slotEl.dataset.slot);
-  if (Number.isNaN(shelf) || Number.isNaN(slot)) return null;
-  return { shelf, slot, el: slotEl };
-}
-
 function slotEl(shelf: number, slot: number): HTMLElement | null {
   return document.querySelector(`.slot[data-shelf="${shelf}"][data-slot="${slot}"]`);
 }
@@ -97,6 +87,11 @@ export default function Board() {
   const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const landTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const landN = useRef(0);
+  // empty-slot targets captured at drag start (board is static during a drag),
+  // so the drop can snap to the NEAREST empty slot — no pixel-perfect release.
+  const emptyCache = useRef<{ shelf: number; slot: number; cx: number; cy: number; rect: DOMRect }[]>([]);
+  const slotSize = useRef(40);
+  const srcCenter = useRef({ x: 0, y: 0 });
 
   // latest selection/hammer, read inside the pointer handlers without re-subscribing
   const selectedRef = useRef(selected);
@@ -175,11 +170,49 @@ export default function Board() {
   }
 
   useEffect(() => {
+    function buildEmptyCache(srcShelf: number, srcSlot: number) {
+      const cache: { shelf: number; slot: number; cx: number; cy: number; rect: DOMRect }[] = [];
+      let sz = 40;
+      document.querySelectorAll<HTMLElement>(".slot").forEach((el) => {
+        const sh = Number(el.dataset.shelf);
+        const sl = Number(el.dataset.slot);
+        if (Number.isNaN(sh) || Number.isNaN(sl)) return;
+        if ((board.shelves[sh]?.[sl]?.length ?? 0) !== 0) return; // only empty slots are targets
+        const rr = el.getBoundingClientRect();
+        sz = Math.max(sz, Math.min(rr.width, rr.height));
+        cache.push({ shelf: sh, slot: sl, cx: rr.left + rr.width / 2, cy: rr.top + rr.height / 2, rect: rr });
+      });
+      emptyCache.current = cache;
+      slotSize.current = sz;
+      const se = slotEl(srcShelf, srcSlot)?.getBoundingClientRect();
+      if (se) srcCenter.current = { x: se.left + se.width / 2, y: se.top + se.height / 2 };
+    }
+
+    // nearest empty slot to (x,y); permissive radius, and "closer to where it
+    // came from than to any empty slot" reads as a cancel (put it back).
+    function pickTarget(x: number, y: number) {
+      let best: (typeof emptyCache.current)[number] | null = null;
+      let bestD = Infinity;
+      for (const e of emptyCache.current) {
+        const d = Math.hypot(x - e.cx, y - e.cy);
+        if (d < bestD) {
+          bestD = d;
+          best = e;
+        }
+      }
+      if (!best) return null;
+      if (bestD > slotSize.current * 2.4) return null; // released far off the board
+      const dSrc = Math.hypot(x - srcCenter.current.x, y - srcCenter.current.y);
+      if (bestD > dSrc) return null; // nearer the origin → treat as cancel
+      return best;
+    }
+
     function beginDrag(d: DownInfo, x: number, y: number) {
       const srcEl = slotEl(d.shelf, d.slot);
       const goodEl = srcEl?.querySelector(".good") as HTMLElement | null;
       const r = (goodEl ?? srcEl)?.getBoundingClientRect();
       ghostSize.current = { w: r?.width || 40, h: r?.height || 60 };
+      buildEmptyCache(d.shelf, d.slot);
       dragging.current = true;
       setDragType(d.type);
       setDragSrc({ shelf: d.shelf, slot: d.slot });
@@ -202,9 +235,8 @@ export default function Board() {
         else return;
       }
       placeGhost(e.clientX, e.clientY, true);
-      const t = slotElFromPoint(e.clientX, e.clientY);
-      if (t && board.shelves[t.shelf]?.[t.slot]?.length === 0) setDropTarget({ shelf: t.shelf, slot: t.slot });
-      else setDropTarget(null);
+      const t = pickTarget(e.clientX, e.clientY);
+      setDropTarget(t ? { shelf: t.shelf, slot: t.slot } : null);
     }
 
     function glideTo(rect: DOMRect, dur: string) {
@@ -264,9 +296,9 @@ export default function Board() {
       down.current = null;
       if (!d) return;
       if (dragging.current) {
-        const t = slotElFromPoint(e.clientX, e.clientY);
-        if (t && !(t.shelf === d.shelf && t.slot === d.slot) && board.shelves[t.shelf]?.[t.slot]?.length === 0) {
-          settleAndCommit(t.el.getBoundingClientRect(), { shelf: d.shelf, slot: d.slot }, { shelf: t.shelf, slot: t.slot });
+        const t = pickTarget(e.clientX, e.clientY);
+        if (t && !(t.shelf === d.shelf && t.slot === d.slot)) {
+          settleAndCommit(t.rect, { shelf: d.shelf, slot: d.slot }, { shelf: t.shelf, slot: t.slot });
         } else {
           settleBack({ shelf: d.shelf, slot: d.slot });
         }

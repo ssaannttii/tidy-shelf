@@ -15,7 +15,7 @@ import {
   type ClearEvent,
   type Move,
 } from "./engine";
-import { findHint, solveGreedy } from "./solver";
+import { findHint, solve, solveGreedy } from "./solver";
 import { getLevel, starsForMoves, TOTAL_LEVELS } from "./levels";
 import type { ItemType, LevelData } from "./types";
 
@@ -330,12 +330,24 @@ export const useGame = create<GameStore>((set, get) => {
       finishWin();
       return;
     }
-    if (isStuck(board)) {
-      if (get().powerups.shuffle > 0 || get().powerups.hammer > 0) {
-        pushFloat("¡Atascado! Prueba un potenciador", "info");
+    // Dead board? Either no legal move at all (isStuck, cheap) or the board is
+    // provably unsolvable. `solve` returns solvable:false with exact:true ONLY
+    // when it exhausts the search (no false losses); if it hits the node cap it
+    // returns exact:false and we don't call it dead. Solvable boards return fast
+    // (BFS stops at the first solved state).
+    let dead = isStuck(board);
+    if (!dead) {
+      const res = solve(board, 40000);
+      dead = !res.solvable && res.exact;
+    }
+    if (dead) {
+      const pw = get().powerups;
+      if (pw.shuffle > 0 || pw.hammer > 0) {
+        pushFloat("Sin salida — prueba 🔀 o 🔨", "info");
       } else {
         set({ status: "lost", lostReason: "stuck" });
         play("lose");
+        vibrate([20, 60, 20]);
       }
     }
   }
