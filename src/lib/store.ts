@@ -162,7 +162,7 @@ interface GameStore {
   dismissFloat: (id: number) => void;
 }
 
-const emptyBoard: Board = { shelves: [], slotsPerShelf: 3, locked: [], neighbors: [] };
+const emptyBoard: Board = { shelves: [], slotsPerShelf: 3, locked: [], neighbors: [], unlockBelow: [] };
 
 /** count of a specific item type still on the board (all depths) */
 function typeCount(b: Board, t: ItemType): number {
@@ -342,8 +342,16 @@ export const useGame = create<GameStore>((set, get) => {
     }
     if (dead) {
       const pw = get().powerups;
-      if (pw.shuffle > 0 || pw.hammer > 0) {
-        pushFloat("Sin salida — prueba 🔀 o 🔨", "info");
+      // Only offer a booster that can ACTUALLY rescue this board. The hammer
+      // removes a good / chips a crate / breaks a padlock, so it always can.
+      // Shuffle only permutes item types, so it's useless when everything left
+      // is sealed inside a locked shelf.
+      const anyLocked = board.locked.some(Boolean);
+      const canHammer = pw.hammer > 0 && itemsRemaining(board) > 0;
+      const canShuffle = pw.shuffle > 0 && !anyLocked;
+      if (canHammer || canShuffle) {
+        const tips = [canHammer ? "🔨" : "", canShuffle ? "🔀" : ""].filter(Boolean).join(" o ");
+        pushFloat(`Sin salida — usa ${tips}`, "info");
       } else {
         set({ status: "lost", lostReason: "stuck" });
         play("lose");
@@ -383,7 +391,7 @@ export const useGame = create<GameStore>((set, get) => {
       return;
     }
     const cell = s.board.shelves[shelf]?.[slot];
-    if (!cell || cell.length === 0 || s.board.locked[shelf] || s.powerups.hammer <= 0) {
+    if (!cell || s.powerups.hammer <= 0 || (cell.length === 0 && !s.board.locked[shelf])) {
       set({ hammerArmed: false, selected: null });
       return;
     }
@@ -396,6 +404,21 @@ export const useGame = create<GameStore>((set, get) => {
       coins: s.progress.coins,
       powerups: { ...s.powerups },
     };
+    // A locked shelf takes priority: the hammer breaks the padlock. Without this
+    // the hammer refused locked shelves, so "prueba 🔨" was a dead end.
+    if (s.board.locked[shelf]) {
+      const nb2 = cloneBoard(s.board);
+      nb2.locked[shelf] = false;
+      const clears2 = resolveClears(nb2);
+      set({
+        history: [...s.history, snapshot].slice(-80),
+        hammerArmed: false,
+        powerups: { ...s.powerups, hammer: s.powerups.hammer - 1 },
+      });
+      pushFloat("¡Candado roto!", "info");
+      applyOutcome(nb2, clears2, true);
+      return;
+    }
     const nb = cloneBoard(s.board);
     const slotArr = nb.shelves[shelf][slot];
     const f = slotArr[slotArr.length - 1];

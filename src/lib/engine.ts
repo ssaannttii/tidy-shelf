@@ -25,6 +25,27 @@ export interface Board {
   locked: boolean[];
   /** neighbours[shelf] = orthogonally-adjacent shelf indices (from the layout). */
   neighbors: number[][];
+  /**
+   * Anti-deadlock guarantee for locked shelves. A lock whose ONLY key is
+   * "clear a neighbour" is a trap: the player can empty those neighbours by
+   * moving their goods elsewhere (never completing a trio *in* them), and then
+   * the key is gone forever — if the last goods sit inside the locked shelf the
+   * level is dead with no feedback.
+   *
+   * So locks also open on their own once the FREE material (cells outside every
+   * locked shelf) runs low — see `applyAutoUnlocks`. That key cannot vanish,
+   * because emptying the board is exactly what shrinks the free pool.
+   *
+   * `unlockBelow[shelf]` is kept as a per-shelf hint (0 = none) but the binding
+   * guarantee is the free-material rule, which is what makes this safe with
+   * SEVERAL locks at once (a per-shelf threshold is not: two locks holding 6
+   * each, nothing outside, leaves 12 remaining and neither threshold fires).
+   *
+   * Everything is derived from board CONTENT, not hidden counters, so it stays
+   * deterministic and the solver's canonical key (contents + locked[]) is
+   * still correct.
+   */
+  unlockBelow: number[];
 }
 
 export interface Move {
@@ -127,14 +148,61 @@ export function boardFromLevel(level: LevelData): Board {
   }
 
   const locked = new Array(nShelves).fill(false);
-  for (const s of level.locked ?? []) if (s >= 0 && s < nShelves) locked[s] = true;
+  const unlockBelow = new Array(nShelves).fill(0);
+  for (const s of level.locked ?? []) {
+    if (s < 0 || s >= nShelves) continue;
+    locked[s] = true;
+    // opens while there is still material outside → never a dead end
+    const inside = shelves[s].reduce((n, sl) => n + sl.length, 0);
+    unlockBelow[s] = inside + 3;
+  }
 
-  return {
+  const b: Board = {
     shelves,
     slotsPerShelf: level.slotsPerShelf,
     locked,
     neighbors: computeNeighbors(level.layout, nShelves),
+    unlockBelow,
   };
+  applyAutoUnlocks(b);
+  return b;
+}
+
+/**
+ * Anti-deadlock: open locks once the FREE material runs low.
+ *
+ * "Free" = cells that are NOT sealed inside a locked shelf. Goods can never be
+ * moved INTO a locked shelf and never out of one, so the sealed pool only ever
+ * shrinks — which means the free pool is what the player actually consumes. If
+ * we let it hit zero with locks still shut, the level is dead. Opening while a
+ * few free cells remain (< FREE_FLOOR) guarantees that can't happen, for any
+ * number of locks, without any hidden counter.
+ */
+const FREE_FLOOR = 6;
+
+export function applyAutoUnlocks(b: Board): boolean {
+  let sealed = 0;
+  let total = 0;
+  let anyLocked = false;
+  for (let s = 0; s < b.shelves.length; s++) {
+    let n = 0;
+    for (const sl of b.shelves[s]) n += sl.length;
+    total += n;
+    if (b.locked[s]) {
+      sealed += n;
+      anyLocked = true;
+    }
+  }
+  if (!anyLocked) return false;
+  const free = total - sealed;
+  if (free >= FREE_FLOOR) return false;
+  let changed = false;
+  for (let s = 0; s < b.locked.length; s++)
+    if (b.locked[s]) {
+      b.locked[s] = false;
+      changed = true;
+    }
+  return changed;
 }
 
 export function cloneBoard(b: Board): Board {
@@ -143,6 +211,7 @@ export function cloneBoard(b: Board): Board {
     shelves: b.shelves.map((sh) => sh.map((sl) => sl.map((c) => ({ ...c }) as Cell))),
     locked: b.locked.slice(),
     neighbors: b.neighbors, // static — safe to share
+    unlockBelow: b.unlockBelow, // static — safe to share
   };
 }
 
@@ -223,6 +292,8 @@ export function resolveClears(b: Board): ClearEvent[] {
         changed = true;
       }
     }
+    // content-threshold unlocks (see Board.unlockBelow) — may enable more clears
+    if (applyAutoUnlocks(b)) changed = true;
   }
   return events;
 }

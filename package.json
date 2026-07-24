@@ -8,7 +8,7 @@
     "build": "next build",
     "start": "next start",
     "gen:levels": "tsx scripts/genLevels.ts",
-    "test": "tsx scripts/engine.test.ts && tsx scripts/test.ts",
+    "test": "tsx scripts/engine.test.ts && tsx scripts/deadlock.test.ts && tsx scripts/test.ts",
     "test:engine": "tsx scripts/engine.test.ts",
     "test:levels": "tsx scripts/test.ts"
   },
