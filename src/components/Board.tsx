@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useGame } from "../lib/store";
 import { vibrate } from "../lib/audio";
+import { woodClass } from "../lib/items";
 import { Good } from "./Good";
 import type { ItemType } from "../lib/types";
 
@@ -357,6 +358,8 @@ export default function Board() {
 
   if (!level) return null;
 
+  const wood = woodClass(level.world); // cosmetic shelf finish (design v2)
+
   const slotsPer = board.slotsPerShelf;
   // widest row (in shelves) → every shelf becomes 1/cols of the cabinet width,
   // so the mueble always fits the viewport and never reflows as items clear.
@@ -365,7 +368,7 @@ export default function Board() {
   return (
     <div className="board-wrap">
       <div
-        className={`cabinet ${shaking ? "shake" : ""} ${hammerArmed ? "armed" : ""} ${dragSrc ? "dragging" : ""}`}
+        className={`cabinet ${wood} ${shaking ? "shake" : ""} ${hammerArmed ? "armed" : ""} ${dragSrc ? "dragging" : ""}`}
         onPointerDown={onPointerDown}
         style={{ "--cols": cols } as React.CSSProperties}
       >
@@ -427,6 +430,13 @@ export default function Board() {
                       </div>
                     );
                   })}
+                  {board.locked[cell] && (
+                    <span className="lock-overlay" aria-hidden>
+                      <i className="chain a" />
+                      <i className="chain b" />
+                      <b className="padlock" />
+                    </span>
+                  )}
                   {pulsing[cell] && <Burst seed={pulse[cell] ?? 0} />}
                 </div>
               );

@@ -76,6 +76,21 @@ export const WORLDS: WorldMeta[] = [
   { id: 5, name: "Taller", emoji: "🔧", accent: "#5b6b7a", wood: "#7d7266", bg: ["#e9ecef", "#d5dbe1"] },
 ];
 
+/** Cosmetic shelf finish per world (design v2 component library: 6 shelf types).
+ *  The class re-points the --wood-* tokens, so cabinet, cells and the order
+ *  trays all follow from one class name. */
+const WOOD_BY_WORLD: Record<number, string> = {
+  1: "wood-oak", // Despensa
+  2: "wood-fridge", // Cocina — glass fridge
+  3: "wood-cream", // Jardín — painted cream
+  4: "wood-candy", // Juguetes
+  5: "wood-walnut", // Taller
+};
+
+export function woodClass(world: number): string {
+  return WOOD_BY_WORLD[world] ?? "wood-oak";
+}
+
 export function worldMeta(id: number): WorldMeta {
   return WORLDS.find((w) => w.id === id) ?? WORLDS[0];
 }

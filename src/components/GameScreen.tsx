@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { useGame, type PowerId } from "../lib/store";
 import { itemsRemaining } from "../lib/engine";
-import { worldMeta } from "../lib/items";
+import { woodClass, worldMeta } from "../lib/items";
 import { fmtTime } from "./ui";
 import Board from "./Board";
 import { Good } from "./Good";
@@ -101,7 +101,7 @@ export default function GameScreen() {
         )}
 
         {orders.length > 0 && (
-          <div className="orders">
+          <div className={`orders ${woodClass(level.world)}`}>
             {orders.map((o) => (
               <div className="order" key={o.id}>
                 <div className="order-cell">
