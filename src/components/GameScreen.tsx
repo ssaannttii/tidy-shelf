@@ -5,6 +5,7 @@ import { itemsRemaining } from "../lib/engine";
 import { worldMeta } from "../lib/items";
 import { fmtTime } from "./ui";
 import Board from "./Board";
+import { Good } from "./Good";
 import { WinModal, LoseModal, SettingsModal, Tutorial, MechTutorial, ShopModal, Confetti } from "./Modals";
 
 const POWERS: { id: PowerId; icon: string; label: string }[] = [
@@ -27,6 +28,7 @@ export default function GameScreen() {
   const seeMech = useGame((s) => s.seeMech);
   const timeLeftMs = useGame((s) => s.timeLeftMs);
   const combo = useGame((s) => s.combo);
+  const orders = useGame((s) => s.orders);
   const freezeMs = useGame((s) => s.freezeMs);
   const doubleMs = useGame((s) => s.doubleMs);
   const powerups = useGame((s) => s.powerups);
@@ -95,6 +97,26 @@ export default function GameScreen() {
               style={{ width: `${pct}%` }}
             />
             <span className="tlabel">{freezeMs > 0 ? "❄️ " : ""}{fmtTime(timeLeftMs)}</span>
+          </div>
+        )}
+
+        {orders.length > 0 && (
+          <div className="orders">
+            {orders.map((o) => (
+              <div className="order" key={o.id}>
+                <div className="order-cell">
+                  <div className="order-good">
+                    <Good type={o.type} />
+                  </div>
+                  <span className="order-badge">×{o.need}</span>
+                </div>
+                <div className="order-ticks">
+                  {Array.from({ length: o.need }).map((_, i) => (
+                    <span key={i} className={`tick ${i < o.got ? "on" : ""}`} />
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         )}
 

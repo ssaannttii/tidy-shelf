@@ -12,11 +12,23 @@ import {
   resolveClears,
   type Board,
   type Cell,
+  type ClearEvent,
   type Move,
 } from "./engine";
 import { findHint, solveGreedy } from "./solver";
 import { getLevel, starsForMoves, TOTAL_LEVELS } from "./levels";
-import type { LevelData } from "./types";
+import type { ItemType, LevelData } from "./types";
+
+/** In-game "order" informer: collect ×need of a good; ticks fill as you clear it. */
+export interface Order {
+  id: number;
+  type: ItemType;
+  need: number;
+  got: number;
+}
+const ORDER_SLOTS = 3;
+const ORDER_MAX = 3; // most ticks an order can ask for
+const ORDER_REWARD = 30;
 import {
   defaultProgress,
   loadProgress,
@@ -130,6 +142,7 @@ interface GameStore {
   shake: number;
   floats: FloatMsg[];
   _floatSeq: number;
+  orders: Order[];
 
   hydrate: () => void;
   setSound: (v: boolean) => void;
@@ -151,7 +164,73 @@ interface GameStore {
 
 const emptyBoard: Board = { shelves: [], slotsPerShelf: 3, locked: [], neighbors: [] };
 
+/** count of a specific item type still on the board (all depths) */
+function typeCount(b: Board, t: ItemType): number {
+  let n = 0;
+  for (const shelf of b.shelves)
+    for (const slot of shelf) for (const cell of slot) if (cell.k === "item" && cell.t === t) n += 1;
+  return n;
+}
+
+/** distinct item types on the board, sorted by remaining count (desc) */
+function boardItemTypes(b: Board): ItemType[] {
+  const count = new Map<ItemType, number>();
+  for (const shelf of b.shelves)
+    for (const slot of shelf) for (const cell of slot) if (cell.k === "item") count.set(cell.t, (count.get(cell.t) ?? 0) + 1);
+  return [...count.keys()].sort((a, z) => (count.get(z) ?? 0) - (count.get(a) ?? 0));
+}
+
 export const useGame = create<GameStore>((set, get) => {
+  let orderSeq = 0;
+
+  /** an order asks for as many clears of a good as the board can give, up to 3 */
+  function makeOrder(b: Board, t: ItemType): Order {
+    const need = Math.max(1, Math.min(ORDER_MAX, Math.floor(typeCount(b, t) / 3)));
+    return { id: ++orderSeq, type: t, need, got: 0 };
+  }
+
+  /** pick up to ORDER_SLOTS types (favouring the most plentiful) as fresh orders */
+  function initOrders(b: Board): Order[] {
+    return boardItemTypes(b)
+      .slice(0, ORDER_SLOTS)
+      .map((t) => makeOrder(b, t));
+  }
+
+  /** +1 tick per clear of a matching good; recycle completed / exhausted orders */
+  function advanceOrders(prev: Order[], clears: ClearEvent[], boardAfter: Board) {
+    const orders = prev.map((o) => ({ ...o }));
+    for (const c of clears) {
+      const o = orders.find((x) => x.type === c.type && x.got < x.need);
+      if (o) o.got += 1;
+    }
+    const present = boardItemTypes(boardAfter);
+    const presentSet = new Set(present);
+    const active = new Set(orders.map((o) => o.type));
+    let bonus = 0;
+    let completed = 0;
+    const next: Order[] = [];
+    for (const o of orders) {
+      const done = o.got >= o.need;
+      const exhausted = !presentSet.has(o.type);
+      if (done || exhausted) {
+        if (done) {
+          bonus += ORDER_REWARD;
+          completed += 1;
+        }
+        active.delete(o.type);
+        const nt = present.find((t) => !active.has(t));
+        if (nt) {
+          active.add(nt);
+          next.push(makeOrder(boardAfter, nt));
+        }
+        // else: no fresh type left → drop this slot
+      } else {
+        next.push(o);
+      }
+    }
+    return { orders: next, bonus, completed };
+  }
+
   function pushFloat(text: string, kind: FloatMsg["kind"]) {
     const seq = get()._floatSeq + 1;
     const f: FloatMsg = { id: seq, text, kind };
@@ -187,12 +266,13 @@ export const useGame = create<GameStore>((set, get) => {
   }
 
   // Shared scoring / board-commit for a resolved board + its clears.
-  function applyOutcome(board: Board, clears: { shelf: number }[], smash: boolean) {
+  function applyOutcome(board: Board, clears: ClearEvent[], smash: boolean) {
     const s = get();
     let combo = s.combo;
     let comboMs = s.comboMs;
     let score = s.score;
     let coins = s.progress.coins;
+    let orders = s.orders;
     const pulse = s.pulse.slice();
 
     if (clears.length > 0) {
@@ -213,6 +293,16 @@ export const useGame = create<GameStore>((set, get) => {
         pushFloat(`+${gained}`, "coins");
       }
       vibrate(clears.length > 1 ? [12, 30, 12] : 14);
+
+      // advance the order informers, reward completed ones
+      const adv = advanceOrders(orders, clears, board);
+      orders = adv.orders;
+      if (adv.bonus > 0) {
+        coins += adv.bonus;
+        pushFloat(`¡Pedido! +${adv.bonus}`, "coins");
+        play("power");
+        vibrate([10, 25, 10]);
+      }
     } else if (smash) {
       play("power");
       vibrate(12);
@@ -228,6 +318,7 @@ export const useGame = create<GameStore>((set, get) => {
       comboMs,
       score,
       pulse,
+      orders,
       selected: null,
       hint: null,
       hintMs: 0,
@@ -341,6 +432,7 @@ export const useGame = create<GameStore>((set, get) => {
       pulse: new Array(level.shelves.length).fill(0),
       shake: 0,
       floats: [],
+      orders: initOrders(board),
     });
   }
 
@@ -375,6 +467,7 @@ export const useGame = create<GameStore>((set, get) => {
     shake: 0,
     floats: [],
     _floatSeq: 0,
+    orders: [],
 
     hydrate: () => {
       if (get().hydrated) return;
